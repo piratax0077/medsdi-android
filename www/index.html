@@ -713,14 +713,14 @@
         <div class="login-panel-contenido" id="cont_i_login">
             <h1 class="login-titulo">Ingresa a tu cuenta</h1>
             <div class="login-campo">
-                <label for="user">Correo electrónico</label>
+                <label for="user" class="floating-label">Correo electrónico</label>
                 <div class="login-input-contenedor">
                     <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M3.5 6.5h17v11h-17zM4 7l8 6 8-6"/></svg>
                     <input type="email" class="input-app" placeholder="nombre@correo.cl" id="user" value="" autocomplete="email">
                 </div>
             </div>
             <div class="login-campo">
-                <label for="pass">Contraseña</label>
+                <label for="pass" class="floating-label">Contraseña</label>
                 <div class="login-input-contenedor">
                     <svg viewBox="0 0 24 24" aria-hidden="true"><rect x="5" y="10" width="14" height="11" rx="2"/><path d="M8 10V7a4 4 0 0 1 8 0v3"/></svg>
                     <input type="password" class="input-app" placeholder="Ingresa tu contraseña" id="pass" value="" autocomplete="current-password">
@@ -819,19 +819,19 @@
             <div class="dashboard-scroll">
             <h1 class="dashboard-pregunta">¿Qué necesitas gestionar?</h1>
             <div class="dashboard-grid profesional-grid">
-                <div class="dashboard-card" onclick="vista('autorizaciones_sdi')" role="button" tabindex="0">
-                    <span class="dashboard-card-icon icon-prof-autorizacion"></span>
-                    <div class="dashboard-card-copy">
-                        <h3>Mis autorizaciones</h3>
-                        <p>Revisa solicitudes pendientes</p>
-                    </div>
-                    <span class="dashboard-card-arrow">›</span>
-                </div>
                 <div class="dashboard-card" onclick="vista('agenda-profesional'); cargarAgendaProfesional()" role="button" tabindex="0">
                             <span class="dashboard-card-icon icon-prof-agenda"></span>
                     <div class="dashboard-card-copy">
                         <h3>Mi agenda</h3>
                         <p>Citas y telemedicina</p>
+                    </div>
+                    <span class="dashboard-card-arrow">›</span>
+                </div>
+                <div class="dashboard-card" onclick="vista('autorizaciones_sdi')" role="button" tabindex="0">
+                    <span class="dashboard-card-icon icon-prof-autorizacion"></span>
+                    <div class="dashboard-card-copy">
+                        <h3>Mis autorizaciones</h3>
+                        <p>Revisa solicitudes pendientes</p>
                     </div>
                     <span class="dashboard-card-arrow">›</span>
                 </div>

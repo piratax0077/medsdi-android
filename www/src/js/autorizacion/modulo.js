@@ -229,12 +229,24 @@ const desactivarLoginBiometricoApp = () => {
 };
 
 const actualizarBotonLoginBiometricoApp = () => {
-    var disponible = typeof Fingerprint !== 'undefined';
-    $('#login_con_biometria').toggle(disponible);
+    var $boton = $('#login_con_biometria');
+    var habilitado = loginBiometricoHabilitadoApp();
+
+    // Se mantiene oculto si el usuario no activó esta función o si el
+    // plugin todavía no está disponible (por ejemplo, antes de deviceready).
+    $boton.hide();
+    if (!habilitado || typeof Fingerprint === 'undefined') return;
+
+    // Tener el plugin instalado no garantiza que exista una huella enrolada.
+    comprobarBiometriaApp(function() {
+        $boton.show();
+    }, function() {
+        $boton.hide();
+    });
 };
 
 const ingresarConBiometriaApp = () => {
-    if (typeof Fingerprint === 'undefined') {
+    if (!loginBiometricoHabilitadoApp() || typeof Fingerprint === 'undefined') {
         msg('Ingreso con huella', 'El ingreso biométrico no está habilitado.', 'warning');
         return;
     }

@@ -1,7 +1,7 @@
 <?xml version='1.0' encoding='utf-8'?>
 <widget id="com.medichile.app"
-    version="1.0.10"
-    android-versionCode="10010"
+    version="1.0.11"
+    android-versionCode="10011"
     xmlns="http://www.w3.org/ns/widgets"
     xmlns:cdv="http://cordova.apache.org/ns/1.0">
 
