@@ -2405,17 +2405,17 @@
             <div class="campo-flotante">
                 <label class="floating-label-activo">Clave actual</label>
                 <input type="password" id="perfil_app_clave_actual" inputmode="numeric" maxlength="4" autocomplete="off">
-                <button type="button" data-role="none" class="campo-ojo" onclick="verClavePerfil('perfil_app_clave_actual', this)" aria-label="Mostrar contraseña"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M2.5 12S6 5.5 12 5.5 21.5 12 21.5 12 18 18.5 12 18.5 2.5 12 2.5 12z"/><circle cx="12" cy="12" r="3"/></svg></button>
+                <button type="button" data-role="none" class="campo-ojo" onclick="verClavePerfil('perfil_app_clave_actual', this)" aria-label="Mostrar contraseña"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M2.5 12S6 5.5 12 5.5 21.5 12 21.5 12 18 18.5 12 18.5 2.5 12 2.5 12z"/><circle cx="12" cy="12" r="3"/><path class="ojo-tachado" d="M4 4l16 16"/></svg></button>
             </div>
             <div class="campo-flotante">
                 <label class="floating-label-activo">Nueva clave</label>
                 <input type="password" id="perfil_app_clave_nueva" inputmode="numeric" maxlength="4" autocomplete="new-password">
-                <button type="button" data-role="none" class="campo-ojo" onclick="verClavePerfil('perfil_app_clave_nueva', this)" aria-label="Mostrar contraseña"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M2.5 12S6 5.5 12 5.5 21.5 12 21.5 12 18 18.5 12 18.5 2.5 12 2.5 12z"/><circle cx="12" cy="12" r="3"/></svg></button>
+                <button type="button" data-role="none" class="campo-ojo" onclick="verClavePerfil('perfil_app_clave_nueva', this)" aria-label="Mostrar contraseña"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M2.5 12S6 5.5 12 5.5 21.5 12 21.5 12 18 18.5 12 18.5 2.5 12 2.5 12z"/><circle cx="12" cy="12" r="3"/><path class="ojo-tachado" d="M4 4l16 16"/></svg></button>
             </div>
             <div class="campo-flotante">
                 <label class="floating-label-activo">Confirmar nueva clave</label>
                 <input type="password" id="perfil_app_clave_confirmacion" inputmode="numeric" maxlength="4" autocomplete="new-password">
-                <button type="button" data-role="none" class="campo-ojo" onclick="verClavePerfil('perfil_app_clave_confirmacion', this)" aria-label="Mostrar contraseña"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M2.5 12S6 5.5 12 5.5 21.5 12 21.5 12 18 18.5 12 18.5 2.5 12 2.5 12z"/><circle cx="12" cy="12" r="3"/></svg></button>
+                <button type="button" data-role="none" class="campo-ojo" onclick="verClavePerfil('perfil_app_clave_confirmacion', this)" aria-label="Mostrar contraseña"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M2.5 12S6 5.5 12 5.5 21.5 12 21.5 12 18 18.5 12 18.5 2.5 12 2.5 12z"/><circle cx="12" cy="12" r="3"/><path class="ojo-tachado" d="M4 4l16 16"/></svg></button>
             </div>
             <div class="btn-app7 mt20" onclick="cambiarClaveDispositivoApp()">Cambiar clave</div>
         </section>
@@ -2426,7 +2426,7 @@
             <div class="campo-flotante">
                 <label class="floating-label-activo">PIN actual de este dispositivo</label>
                 <input type="password" id="perfil_app_biometria_pin" inputmode="numeric" maxlength="4" autocomplete="off">
-                <button type="button" data-role="none" class="campo-ojo" onclick="verClavePerfil('perfil_app_biometria_pin', this)" aria-label="Mostrar contraseña"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M2.5 12S6 5.5 12 5.5 21.5 12 21.5 12 18 18.5 12 18.5 2.5 12 2.5 12z"/><circle cx="12" cy="12" r="3"/></svg></button>
+                <button type="button" data-role="none" class="campo-ojo" onclick="verClavePerfil('perfil_app_biometria_pin', this)" aria-label="Mostrar contraseña"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M2.5 12S6 5.5 12 5.5 21.5 12 21.5 12 18 18.5 12 18.5 2.5 12 2.5 12z"/><circle cx="12" cy="12" r="3"/><path class="ojo-tachado" d="M4 4l16 16"/></svg></button>
             </div>
             <div id="perfil_app_biometria_activar" class="btn-app7 mt10" onclick="activarBiometriaApp()">Activar huella digital</div>
             <div id="perfil_app_biometria_desactivar" class="btn-app4 mt10" onclick="desactivarBiometriaApp()" style="display:none">Desactivar huella digital</div>
@@ -2437,7 +2437,7 @@
             <div class="campo-flotante">
                 <label class="floating-label-activo">Contraseña de tu cuenta</label>
                 <input type="password" id="perfil_app_password_login" autocomplete="current-password">
-                <button type="button" data-role="none" class="campo-ojo" onclick="verClavePerfil('perfil_app_password_login', this)" aria-label="Mostrar contraseña"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M2.5 12S6 5.5 12 5.5 21.5 12 21.5 12 18 18.5 12 18.5 2.5 12 2.5 12z"/><circle cx="12" cy="12" r="3"/></svg></button>
+                <button type="button" data-role="none" class="campo-ojo" onclick="verClavePerfil('perfil_app_password_login', this)" aria-label="Mostrar contraseña"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M2.5 12S6 5.5 12 5.5 21.5 12 21.5 12 18 18.5 12 18.5 2.5 12 2.5 12z"/><circle cx="12" cy="12" r="3"/><path class="ojo-tachado" d="M4 4l16 16"/></svg></button>
             </div>
             <div id="perfil_app_biometria_login_activar" class="btn-app7 mt10" onclick="activarLoginBiometricoApp()">Activar ingreso con huella</div>
             <div id="perfil_app_biometria_login_desactivar" class="btn-app4 mt10" onclick="desactivarLoginBiometricoApp()" style="display:none">Desactivar ingreso con huella</div>
@@ -2520,8 +2520,7 @@
             <div class="clave-icono"><svg viewBox="0 0 24 24" aria-hidden="true"><rect x="4" y="10" width="16" height="11" rx="2.5"/><path d="M8 10V7a4 4 0 0 1 8 0v3"/><circle cx="12" cy="15.5" r="1.2"/></svg></div>
             <h2 class="clave-titulo">Crea tu clave de desbloqueo</h2>
             <p class="clave-texto">Crea una clave de 4 dígitos para desbloquear la app y validar tus solicitudes.</p>
-            <label for="password_desbloqueo">Clave de 4 dígitos</label>
-            <input type="password" data-role="none" id="password_desbloqueo" class="clave-input" inputmode="numeric" pattern="[0-9]*" maxlength="4" autocomplete="new-password" placeholder="••••">
+            <input type="password" data-role="none" id="password_desbloqueo" class="clave-input" aria-label="Clave de 4 dígitos" inputmode="numeric" pattern="[0-9]*" maxlength="4" autocomplete="new-password" placeholder="••••">
             <small class="clave-ayuda">Usa solo números y evita combinaciones fáciles de adivinar, como fechas de nacimiento o secuencias (1234).</small>
             <div class="btn-app7" onclick="registrarPassword()">Registrar equipo</div>
         </div>

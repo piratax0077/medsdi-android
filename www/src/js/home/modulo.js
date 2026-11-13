@@ -525,7 +525,7 @@ const abrirEditarPerfil = () => {
                 perfilLocal = {};
             }
             var rut = perfil.rut || perfilLocal.rut || '';
-            $('#perfil_menu_rut').text(rut).toggle(!!rut);
+            $('#perfil_menu_rut').empty().append($('<strong>').text('RUT:'), document.createTextNode(' ' + rut)).toggle(!!rut);
             $('#perfil_app_rut').val(rut);
             $('#perfil_app_foto, #perfil_app_foto_camara').val('');
             $('.perfil-app-foto').removeClass('con-nueva-foto');
@@ -871,7 +871,7 @@ const cargarAgendaProfesional = (idLugar) => {
             var opciones = '<option value="">Seleccione lugar de atención</option>';
             lugares.forEach(function(lugar) {
                 opciones += '<option value="' + lugar.id + '">' +
-                    escaparTextoConsentimiento(lugar.nombre) + '</option>';
+                    escaparTextoConsentimiento(String(lugar.nombre || '').toUpperCase()) + '</option>';
             });
             $('#agenda_profesional_lugar').html(opciones).val(actual);
 
@@ -892,7 +892,7 @@ const cargarAgendaProfesional = (idLugar) => {
                     '<p><b>Fecha</b><span>' + escaparTextoConsentimiento(fechaEsp(hora.fecha)) + '</span></p>' +
                     '<p><b>Horario</b><span>' + escaparTextoConsentimiento(hora.hora_inicio) +
                         ' - ' + escaparTextoConsentimiento(hora.hora_termino) + '</span></p>' +
-                    '<p><b>Lugar</b><span>' + escaparTextoConsentimiento(hora.lugar) + '</span></p>' +
+                    '<p><b>Lugar</b><span class="text-uppercase">' + escaparTextoConsentimiento(hora.lugar) + '</span></p>' +
                     '<p><b>Estado</b><span>' + escaparTextoConsentimiento(hora.estado) + '</span></p>' +
                     '</div>' +
                     video + '</div>';
@@ -1827,9 +1827,8 @@ const solicitarMedicos = () => {
                                     <a href="javascript:void(0)" onclick="damePerfilMedico(${medico.id})"> <img class="img-circulo" width="70" src="${imagenMedico}" data-fallback="${medico.sexo === 'M' ? 'src/images/ejemplo_dr.jpg' : 'src/images/ejemplo_dra.jpg'}" alt="Foto perfil"> </a>
                                 </div>
                                 <div class="col-xs-9 medico-card-info">
-                                    <p class="size16 color-azul mb5">${nombreEscapado}</p>
+                                    <p class="size16 color-azul mb5 text-uppercase">${nombreEscapado}</p>
                                     <span class="medico-especialidad-badge">${escaparTextoConsentimiento(especialidadVisible)}</span>
-                                    <p class="letra-small mb5"><img class="mr10" width="15" src="src/images/ubicacion.svg">${lugarAtencion}</p>
                                     <button type="button" data-role="none" class="btn-agendar-hora" onclick="agendarHora(${medico.id}, '${nombreEscapado}', '${especialidadEscapada}')">Agendar hora</button>
                                 </div>
                             </div>
@@ -1913,7 +1912,7 @@ const damePerfilMedico = (idMedico) => {
                 if(prof.lugares_atencion && prof.lugares_atencion.length > 0) {
                     let lugares = '';
                     prof.lugares_atencion.forEach(lugar => {
-                        lugares += `<li>${lugar.nombre} - ${lugar.direccion}</li>`;
+                        lugares += `<li><span class="text-uppercase">${lugar.nombre}</span> - ${lugar.direccion}</li>`;
                     });
                     prof.lugares_atencion_html = `<ul>${lugares}</ul>`;
                 } else {
@@ -1933,7 +1932,7 @@ const damePerfilMedico = (idMedico) => {
                         <div class="row">
                             <div class="col-xs-12 text-center mb20">
                                 <img class="img-circulo" width="100" src="${imagenMedico}" data-fallback="${prof.sexo === 'M' ? 'src/images/ejemplo_dr.jpg' : 'src/images/ejemplo_dra.jpg'}" alt="Foto perfil">
-                                <h3 class="color-azul mt10">${prof.nombre} ${prof.apellido_uno} ${prof.apellido_dos || ''}</h3>
+                                <h3 class="color-azul mt10 text-uppercase">${prof.nombre} ${prof.apellido_uno} ${prof.apellido_dos || ''}</h3>
                             </div>
                         </div>
                     </div>
@@ -2012,15 +2011,8 @@ const agendarHora = (idMedico, nombreMedico, especialidad) => {
                 // Actualizar el header con la información del médico y botón de retorno
                 const origen = getSession('origen_seleccion_profesional') || 'mis_medicos';
                 const vistaRetorno = origen === 'mis_medicos_buscados' ? 'mis_medicos_buscados' : 'mis_medicos';
-                const textoRetorno = origen === 'mis_medicos_buscados'
-                    ? 'Volver a resultados'
-                    : 'Volver a mis profesionales';
-
                 $('#lugares_atencion .top-titulos').html(`
-                    ${htmlCardProfesionalAgenda(nombreMedico, especialidad)}
-                    <div class="btn-app4 btn-volver-compacto text-center size14 mb20" onclick="vista('${vistaRetorno}');">
-                         ${textoRetorno}
-                    </div>
+                    ${htmlCardProfesionalAgenda(nombreMedico, especialidad, null, null, vistaRetorno)}
                     <p class="size14 text-center mb10">Seleccione el lugar de atención</p>
                 `);
 
@@ -2032,9 +2024,8 @@ const agendarHora = (idMedico, nombreMedico, especialidad) => {
                         <div class="row">
                             <div class="col-xs-12 text-left">
                                 <div class="media">
-                                    <img src="src/images/clinica.png" class="img-circulo text-center mr10" width="80" alt="Centro médico">
                                     <div class="media-body text-left lugar-atencion-info">
-                                        <p class="size14 color-azul">${lugar.nombre}</p>
+                                        <p class="size14 color-azul text-uppercase">${lugar.nombre}</p>
                                         <p class="size13"><img class="mr10" width="20" src="src/images/ubicacion.svg">${[lugar.direccion, lugar.ciudad].map(v => String(v == null ? '' : v).trim()).filter(v => v && v !== 'undefined' && v !== 'null').join(' - ') || 'Dirección no informada'}</p>
 
                                         <button type="button" data-role="none" class="btn-agendar-hora" onclick="seleccionarLugarAtencion(${lugar.id},${idMedico},'${lugar.nombre}')">Seleccionar</button>
@@ -2551,7 +2542,7 @@ const renderizarCitasPaciente = () => {
                 <div class="cita-paciente-header">
                     <img class="cita-paciente-avatar" src="${imagenMedico}" data-fallback="${hora.sexo === 'M' ? 'src/images/ejemplo_dr.jpg' : 'src/images/ejemplo_dra.jpg'}" alt="Foto perfil">
                     <div>
-                        <h3>${escaparTextoConsentimiento(medico)}</h3>
+                        <h3 class="text-uppercase">${escaparTextoConsentimiento(medico)}</h3>
                         <p>${escaparTextoConsentimiento(especialidad)}${tipo_especialidad ? ' · ' + escaparTextoConsentimiento(tipo_especialidad) : ''}</p>
                         ${sub_tipo_especialidad ? `<small>${escaparTextoConsentimiento(sub_tipo_especialidad)}</small>` : ''}
                     </div>
@@ -2561,7 +2552,7 @@ const renderizarCitasPaciente = () => {
                 <div class="cita-paciente-datos">
                     <div><img src="src/images/calendario.svg" alt=""><span>${fecha}</span></div>
                     <div><img src="src/images/hora.svg" alt=""><span>${horaInicio} - ${horaTermino}</span></div>
-                    <div class="ancho"><img src="src/images/ubicacion.svg" alt=""><span>${escaparTextoConsentimiento(hora.nombre_lugar_atencion || 'Sin lugar')}</span></div>
+                    <div class="ancho"><img src="src/images/ubicacion.svg" alt=""><span class="text-uppercase">${escaparTextoConsentimiento(hora.nombre_lugar_atencion || 'Sin lugar')}</span></div>
                     ${hora.direccion_lugar_atencion ? `<p>${escaparTextoConsentimiento(hora.direccion_lugar_atencion)} ${escaparTextoConsentimiento(hora.numero_dir_lugar_atencion || '')}</p>` : ''}
                 </div>
 
@@ -3027,16 +3018,18 @@ const especialidadCortaAgenda = (especialidad) => {
 const fotosProfesionalesAgenda = {};
 
 // Card del profesional usada en todos los pasos de Agendar hora (lugar y badges son opcionales).
-const htmlCardProfesionalAgenda = (nombre, especialidad, lugar, badges) => {
+// vistaVolver (opcional): muestra un "← Volver" en la esquina superior izquierda de la card.
+const htmlCardProfesionalAgenda = (nombre, especialidad, lugar, badges, vistaVolver) => {
     const listaBadges = (badges || []).filter(Boolean);
     const fallbackFoto = getSession('foto_fallback_medico_seleccionado') || 'src/images/ejemplo_dr.jpg';
     const foto = getSession('foto_medico_seleccionado') || fallbackFoto;
     return `
         <div class="agenda-profesional-card">
+            ${vistaVolver ? `<button type="button" data-role="none" class="agenda-profesional-volver" onclick="vista('${vistaVolver}');"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M15 18l-6-6 6-6"/></svg>Volver</button>` : ''}
             <img class="agenda-profesional-foto" src="${escaparTextoAgenda(foto)}" data-fallback="${escaparTextoAgenda(fallbackFoto)}" alt="Foto del profesional">
-            <strong class="agenda-profesional-nombre">${escaparTextoAgenda(nombre)}</strong>
+            <strong class="agenda-profesional-nombre text-uppercase">${escaparTextoAgenda(nombre)}</strong>
             <span class="medico-especialidad-badge">${escaparTextoAgenda(especialidadCortaAgenda(especialidad))}</span>
-            ${lugar ? `<span class="agenda-profesional-lugar"><img width="12" src="src/images/ubicacion.svg" alt="">${escaparTextoAgenda(lugar)}</span>` : ''}
+            ${lugar ? `<span class="agenda-profesional-lugar text-uppercase"><img width="12" src="src/images/ubicacion.svg" alt="">${escaparTextoAgenda(lugar)}</span>` : ''}
             ${listaBadges.length ? `<div class="agenda-profesional-badges">${listaBadges.map(b => `<span class="agenda-modalidad-seleccionada">${escaparTextoAgenda(b)}</span>`).join('')}</div>` : ''}
         </div>`;
 };
@@ -3884,9 +3877,9 @@ const buscarProfesionales = () => {
                                 <a href="javascript:void(0)" onclick="damePerfilMedico(${prof.id})"> <img class="img-circulo" width="70" src="${fotoPerfil}" data-fallback="${prof.sexo === 'F' ? 'src/images/ejemplo_dra.jpg' : 'src/images/ejemplo_dr.jpg'}" alt="Foto perfil"> </a>
                             </div>
                             <div class="col-xs-9">
-                                <p class="size16 color-azul mb5">${nombreCard}</p>
+                                <p class="size16 color-azul mb5 text-uppercase">${nombreCard}</p>
                                 <p class="letra-small mb5">${especialidadCard}</p>
-                                <p class="letra-small mb5"><img class="mr10" width="15" src="src/images/ubicacion.svg">${lugarCard}</p>
+                                <p class="letra-small mb5 text-uppercase"><img class="mr10" width="15" src="src/images/ubicacion.svg">${lugarCard}</p>
                                 <button type="button" data-role="none" class="btn-agendar-hora" onclick="agendarProfesionalDesdeBusqueda(${indiceProfesional})">Agendar hora</button>
                             </div>
                         </div>

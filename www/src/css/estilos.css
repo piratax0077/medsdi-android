@@ -2771,7 +2771,7 @@ placeholder{
     margin: 0;
     color: #fff;
     font-size: 24px;
-    font-weight: 800;
+    font-weight: 600;
     line-height: 1.2;
     text-align: center;
     text-wrap: balance;
@@ -4490,6 +4490,10 @@ placeholder{
       box-shadow: none !important;
       font-size: 14px !important;
       text-align: center;
+  }
+
+  #clave_desbloqueo .btn-app7 {
+      font-weight: normal !important;
   }
 
   .ui-page:not(#login):not(#index):not(#inicio-profesional):not(#seleccionar-rol) > .menu-inferior {
@@ -7578,6 +7582,8 @@ body *:not(.glyphicon) {
 #buscador_profesional .size14,
 #lugares_atencion .size14,
 #seleccionar_fecha_hora .size14 { font-size: clamp(14px, 4vw, 17px) !important; }
+/* Nombre del lugar en las cards de "Seleccione el lugar de atención": más contenido */
+#lugares_atencion .lugar-atencion-info .size14 { font-size: clamp(13px, 3.6vw, 15px) !important; }
 
 /* Verificación de reposo (paciente) */
 .reposo-estado-chip { font-size: clamp(11px, 3vw, 12.5px) !important; }
@@ -8353,6 +8359,7 @@ body.teclado-abierto .ui-page > .menu-inferior { display: none !important; }
    Seleccionar fecha y hora: card del profesional, calendario y horarios
    ========================================================= */
 .agenda-profesional-card {
+    position: relative;
     display: flex;
     flex-direction: column;
     align-items: center;
@@ -8366,6 +8373,24 @@ body.teclado-abierto .ui-page > .menu-inferior { display: none !important; }
     text-align: center;
 }
 
+
+/* "← Volver" pequeño en la esquina superior izquierda de la card del profesional */
+.agenda-profesional-volver {
+    position: absolute;
+    top: 10px;
+    left: 10px;
+    display: inline-flex;
+    align-items: center;
+    gap: 2px;
+    padding: 4px 6px;
+    border: 0;
+    background: transparent;
+    color: #1450bd;
+    font-size: 13px;
+    font-weight: 800;
+    line-height: 1;
+    cursor: pointer;
+}
 
 .agenda-profesional-nombre {
     color: #1450bd;
@@ -9448,3 +9473,7 @@ html body #login .login-recuperar.recuperar-reenviar { margin: 0 0 4px !importan
     margin-bottom: 12px !important;
 }
 #recetaonline .ui-content > .container.mt20 { margin-top: 4px !important; }
+
+/* Ojo de contraseña: tachado cuando la clave está oculta, normal cuando se ve. */
+html body #editar-perfil-app .campo-flotante .campo-ojo.activo .ojo-tachado { display: none; }
+html body #editar-perfil-app .perfil-app-tarjeta-rut strong { font-weight: 700; }
