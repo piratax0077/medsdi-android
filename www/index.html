@@ -726,7 +726,7 @@
                     <input type="password" class="input-app" placeholder="Ingresa tu contraseña" id="pass" value="" autocomplete="current-password">
                 </div>
             </div>
-            <a class="login-recuperar">¿Olvidaste tu contraseña?</a>
+            <a class="login-recuperar" onclick="mostrarRecuperarContrasena()" role="button" tabindex="0">¿Olvidaste tu contraseña?</a>
             <button type="button" class="login-boton-principal" onclick="ingresarLogin()">
                 <span>Ingresar</span>
                 <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M5 12h14M14 7l5 5-5 5"/></svg>
@@ -756,6 +756,47 @@
                 <small>Disponible en este dispositivo autorizado, incluso si tu sesión expiró.</small>
             </div>
         </div>
+
+        <!--RECUPERAR CONTRASEÑA-->
+        <div class="login-panel-contenido recuperar-contenido" id="cont_i_recuperar" style="display:none">
+            <button type="button" data-role="none" class="recuperar-volver" onclick="volverLoginDesdeRecuperar()" aria-label="Volver al inicio de sesión">
+                <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M19 12H5M10 7l-5 5 5 5"/></svg>
+                Volver
+            </button>
+
+            <div id="recuperar_formulario">
+                <span class="recuperar-icono" aria-hidden="true">
+                    <svg viewBox="0 0 24 24"><rect x="5" y="10" width="14" height="11" rx="2"/><path d="M8 10V7a4 4 0 0 1 7.5-2"/><circle cx="12" cy="15.5" r="1.4"/></svg>
+                </span>
+                <h1 class="login-titulo recuperar-titulo">Recupera tu contraseña</h1>
+                <p class="recuperar-texto">Ingresa el correo electrónico asociado a tu cuenta y te enviaremos las instrucciones para restablecer tu contraseña.</p>
+                <div class="login-campo">
+                    <label for="recuperar_email" class="floating-label">Correo electrónico</label>
+                    <div class="login-input-contenedor">
+                        <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M3.5 6.5h17v11h-17zM4 7l8 6 8-6"/></svg>
+                        <input type="email" class="input-app" placeholder="nombre@correo.cl" id="recuperar_email" value="" autocomplete="email" inputmode="email">
+                    </div>
+                </div>
+                <button type="button" class="login-boton-principal" id="recuperar_boton" onclick="enviarRecuperarContrasena()">
+                    <span>Enviar correo de recuperación</span>
+                    <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 12l16-8-6 16-2-7z"/></svg>
+                </button>
+            </div>
+
+            <div id="recuperar_enviado" class="recuperar-enviado" style="display:none">
+                <span class="recuperar-icono recuperar-icono-ok" aria-hidden="true">
+                    <svg viewBox="0 0 24 24"><path d="M3.5 6.5h17v11h-17zM4 7l8 6 8-6"/></svg>
+                </span>
+                <h1 class="login-titulo recuperar-titulo">Revisa tu correo</h1>
+                <p class="recuperar-texto">Si <strong id="recuperar_email_enviado"></strong> está asociado a una cuenta, recibirás un correo con las instrucciones para recuperar tu contraseña.</p>
+                <p class="recuperar-nota">No olvides revisar la carpeta de spam o correo no deseado.</p>
+                <button type="button" class="login-boton-principal" onclick="volverLoginDesdeRecuperar()">
+                    <span>Volver a iniciar sesión</span>
+                </button>
+                <a class="login-recuperar recuperar-reenviar" onclick="reintentarRecuperarContrasena()" role="button" tabindex="0">¿No te llegó? Enviar nuevamente</a>
+            </div>
+        </div>
+        <!--CIERRE RECUPERAR CONTRASEÑA-->
     </div>
 </div>
 <!--CIERRE LOGIN-->
@@ -783,7 +824,7 @@
         <span class="dashboard-orbe dashboard-orbe-dos"></span>
         <div class="dashboard-topbar">
             <img alt="Medichile" class="dashboard-logo" src="src/images/logo.svg">
-            <span class="dashboard-role"><i></i> Profesional</span>
+            <span class="dashboard-role">Profesional</span>
             <div class="dashboard-user">
                 <h2>
                     <img class="img-circulo" src="src/images/avatar-generico.svg" alt="Foto de perfil">
@@ -800,11 +841,11 @@
                 <div class="header-menu-perfil">
                     <button type="button" class="header-menu-puntos" onclick="toggleMenuPerfil(event)" aria-label="Abrir menú de perfil">⋮</button>
                     <div class="header-menu-opciones">
-                        <div class="header-menu-cabecera"><span class="header-menu-nombre">Usuario</span></div>
-                        <button type="button" onclick="abrirMensajesApp()">Mensajes</button>
-                        <button type="button" onclick="abrirEditarPerfil()">Editar perfil</button>
-                        <button type="button" class="selector-multiple-roles" onclick="volverASeleccionRoles()">Cambiar perfil</button>
-                        <button type="button" onclick="cerrarSesion()">Cerrar sesión</button>
+                        <div class="header-menu-cabecera"><span class="header-menu-nombre">Menú</span></div>
+                        <button type="button" onclick="abrirMensajesApp()"><svg class="menu-ico" viewBox="0 0 24 24" aria-hidden="true"><rect x="3" y="5.5" width="18" height="13" rx="2.5"/><path d="m3.8 7 7.1 5.4a1.8 1.8 0 0 0 2.2 0L20.2 7"/></svg><span>Mensajes</span></button>
+                        <button type="button" onclick="abrirEditarPerfil()"><svg class="menu-ico" viewBox="0 0 24 24" aria-hidden="true"><path d="M4 20h4L19 9a2.1 2.1 0 0 0-4-4L4 16v4z"/><path d="m13.5 6.5 4 4"/></svg><span>Editar perfil</span></button>
+                        <button type="button" class="selector-multiple-roles" onclick="volverASeleccionRoles()"><svg class="menu-ico" viewBox="0 0 24 24" aria-hidden="true"><path d="M5 8h13m-3-3 3 3-3 3"/><path d="M19 16H6m3-3-3 3 3 3"/></svg><span>Cambiar usuario</span></button>
+                        <button type="button" onclick="cerrarSesion()"><svg class="menu-ico" viewBox="0 0 24 24" aria-hidden="true"><path d="M10 4H6a2 2 0 0 0-2 2v12a2 2 0 0 0 2 2h4"/><path d="m15 8 4 4-4 4M19 12H9"/></svg><span>Cerrar sesión</span></button>
                     </div>
                 </div>
             </div>
@@ -912,14 +953,19 @@
                     <span class="reposo-value" id="reposo_fecha_resumen">Sin fecha configurada</span>
                 </div>
             </div>
-        </div>
-        <div class="sdi-reposo-card">
-            <div class="reposo-form-encabezado">
-                <span>CONFIGURACIÓN</span>
-                <h2>Parámetros de seguimiento</h2>
-                <p>Define las verificaciones que realizará el paciente durante su reposo.</p>
+            <div class="reposo-resumen-accion">
+                <button type="button" data-role="none" class="reposo-config-btn" onclick="abrir_config_reposo()" aria-haspopup="dialog" aria-controls="reposo_config_sidebar">
+                    <svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 1 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 1 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 1 1-2.83-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 1 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 1 1 2.83-2.83l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 1 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 1 1 2.83 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 1 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z"/></svg>
+                    Configuración
+                </button>
             </div>
-            <div class="reposo-seccion">Paciente</div>
+        </div>
+        <div class="sdi-reposo-card reposo-paciente-card">
+            <div class="reposo-form-encabezado">
+                <span>PASO 1</span>
+                <h2>Paciente</h2>
+                <p>Busca y selecciona al paciente con licencia. Luego ajusta su control en Configuración.</p>
+            </div>
             <label class="sdi-label" for="reposo_buscar_paciente">Buscar paciente con licencia</label>
             <div class="sdi-input-group">
                 <input type="search" id="reposo_buscar_paciente" class="input-app" placeholder="Nombre, apellido o RUT">
@@ -927,67 +973,89 @@
             </div>
             <div id="reposo_resultados_pacientes" class="reposo-resultados"></div>
             <input type="hidden" id="reposo_licencia_id">
-
-            <div class="reposo-seccion">Reglas del control</div>
-            <div class="reposo-grid-2">
-                <div>
-                    <label class="sdi-label" for="reposo_activo">Activar control</label>
-                    <select id="reposo_activo" class="input-app">
-                        <option value="0">No</option>
-                        <option value="1">Sí</option>
-                    </select>
-                </div>
-                <div>
-                    <label class="sdi-label" for="reposo_frecuencia">Frecuencia</label>
-                    <select id="reposo_frecuencia" class="input-app">
-                        <option value="1">Cada 1 hora</option>
-                        <option value="2">Cada 2 horas</option>
-                        <option value="4">Cada 4 horas</option>
-                        <option value="8">Cada 8 horas</option>
-                    </select>
-                </div>
-            </div>
-            <label class="sdi-label" for="reposo_radio_km">Radio de movilidad permitido</label>
-            <div class="sdi-input-group">
-                <input type="number" id="reposo_radio_km" class="input-app" value="1" min="0.1" step="0.1">
-                <span>Km</span>
-            </div>
-            <div class="reposo-grid-2">
-                <div>
-                    <label class="sdi-label" for="reposo_control_medicamentos">Medicamentos por cámara</label>
-                    <select id="reposo_control_medicamentos" class="input-app">
-                        <option value="1">Sí</option>
-                        <option value="0">No</option>
-                    </select>
-                </div>
-                <div>
-                    <label class="sdi-label" for="reposo_control_ubicacion">Ubicación del paciente</label>
-                    <select id="reposo_control_ubicacion" class="input-app">
-                        <option value="1">Sí</option>
-                        <option value="0">No</option>
-                    </select>
-                </div>
-            </div>
-
-            <div class="reposo-seccion">Detalles</div>
-            <label class="sdi-label" for="reposo_direccion">Dirección base del reposo</label>
-            <textarea id="reposo_direccion" class="input-app" rows="2" placeholder="Ej: Av. Balmaceda 1234, La Serena"></textarea>
-            <label class="sdi-label" for="reposo_observaciones">Observaciones</label>
-            <textarea id="reposo_observaciones" class="input-app" rows="3" placeholder="Indicaciones adicionales para el paciente"></textarea>
-            <div class="sdi-reposo-actions mt20">
-                <button type="button" class="sdi-btn sdi-btn-autorizar" onclick="guardar_config_reposo()">Guardar configuración</button>
-                <button type="button" class="sdi-btn sdi-btn-rechazar" onclick="cargar_controles_reposo()">Actualizar</button>
-            </div>
-            <div id="reposo_estado_guardado" class="mt10"></div>
         </div>
         <div class="sdi-reposo-card reposo-controles-card">
-            <div class="reposo-form-encabezado">
-                <span>SEGUIMIENTO</span>
-                <h2>Controles enviados</h2>
-                <p>Revisa la aceptación y las verificaciones realizadas por tus pacientes.</p>
+            <div class="reposo-controles-cabecera">
+                <div class="reposo-form-encabezado">
+                    <span>SEGUIMIENTO</span>
+                    <h2>Controles enviados</h2>
+                </div>
+                <button type="button" data-role="none" class="btn-actualizar" onclick="cargar_controles_reposo()" aria-label="Actualizar controles" title="Actualizar controles"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M20 11a8 8 0 0 0-14.3-4.9L4 8M4 4v4h4M4 13a8 8 0 0 0 14.3 4.9L20 16M20 20v-4h-4"/></svg><span>Actualizar</span></button>
             </div>
+            <p class="reposo-controles-ayuda">Revisa la aceptación y las verificaciones realizadas por tus pacientes.</p>
             <div id="reposo_controles_lista"><p class="reposo-aviso">Aún no hay controles configurados.</p></div>
         </div>
+
+        <div id="reposo_config_fondo" class="reposo-sidebar-fondo" onclick="cerrar_config_reposo()"></div>
+        <aside id="reposo_config_sidebar" class="reposo-sidebar sdi-reposo-card" role="dialog" aria-modal="true" aria-labelledby="reposo_config_titulo" aria-hidden="true">
+            <div class="reposo-sidebar-cabecera">
+                <div class="reposo-form-encabezado">
+                    <span>CONFIGURACIÓN</span>
+                    <h2 id="reposo_config_titulo">Parámetros de seguimiento</h2>
+                    <p>Define las verificaciones que realizará el paciente durante su reposo.</p>
+                </div>
+                <button type="button" data-role="none" class="reposo-sidebar-cerrar" onclick="cerrar_config_reposo()" aria-label="Cerrar configuración">
+                    <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M6 6l12 12M18 6L6 18"/></svg>
+                </button>
+            </div>
+            <div class="reposo-sidebar-cuerpo">
+                <div class="reposo-sidebar-paciente">
+                    <span>Paciente</span>
+                    <strong id="reposo_paciente_sidebar">Sin Registro</strong>
+                </div>
+
+                <div class="reposo-seccion">Reglas del control</div>
+                <div class="reposo-grid-2">
+                    <div>
+                        <label class="sdi-label" for="reposo_activo">Activar control</label>
+                        <select id="reposo_activo" class="input-app">
+                            <option value="0">No</option>
+                            <option value="1">Sí</option>
+                        </select>
+                    </div>
+                    <div>
+                        <label class="sdi-label" for="reposo_frecuencia">Frecuencia</label>
+                        <select id="reposo_frecuencia" class="input-app">
+                            <option value="1">Cada 1 hora</option>
+                            <option value="2">Cada 2 horas</option>
+                            <option value="4">Cada 4 horas</option>
+                            <option value="8">Cada 8 horas</option>
+                        </select>
+                    </div>
+                </div>
+                <label class="sdi-label" for="reposo_radio_km">Radio de movilidad permitido</label>
+                <div class="sdi-input-group">
+                    <input type="number" id="reposo_radio_km" class="input-app" value="1" min="0.1" step="0.1">
+                    <span>Km</span>
+                </div>
+                <div class="reposo-grid-2">
+                    <div>
+                        <label class="sdi-label" for="reposo_control_medicamentos">Medicamentos por cámara</label>
+                        <select id="reposo_control_medicamentos" class="input-app">
+                            <option value="1">Sí</option>
+                            <option value="0">No</option>
+                        </select>
+                    </div>
+                    <div>
+                        <label class="sdi-label" for="reposo_control_ubicacion">Ubicación del paciente</label>
+                        <select id="reposo_control_ubicacion" class="input-app">
+                            <option value="1">Sí</option>
+                            <option value="0">No</option>
+                        </select>
+                    </div>
+                </div>
+
+                <div class="reposo-seccion">Detalles</div>
+                <label class="sdi-label" for="reposo_direccion">Dirección base del reposo</label>
+                <textarea id="reposo_direccion" class="input-app" rows="2" placeholder="Ej: Av. Balmaceda 1234, La Serena"></textarea>
+                <label class="sdi-label" for="reposo_observaciones">Observaciones</label>
+                <textarea id="reposo_observaciones" class="input-app" rows="3" placeholder="Indicaciones adicionales para el paciente"></textarea>
+                <div id="reposo_estado_guardado" class="mt10"></div>
+            </div>
+            <div class="reposo-sidebar-pie sdi-reposo-actions">
+                <button type="button" class="sdi-btn sdi-btn-autorizar" onclick="guardar_config_reposo()">Guardar configuración</button>
+            </div>
+        </aside>
     </div>
     <div data-role="footer" class="footer menu-inferior">
         <div class="row bg-azul"><div class="col-xs-12 pt10 pb10 text-center">
@@ -1090,7 +1158,7 @@
         <span class="dashboard-orbe dashboard-orbe-dos"></span>
         <div class="dashboard-topbar">
             <img alt="Medichile" class="dashboard-logo" src="src/images/logo.svg">
-            <span class="dashboard-role"><i></i> Paciente</span>
+            <span class="dashboard-role">Paciente</span>
             <div class="dashboard-user">
                 <h2>
                     <img class="img-circulo" src="src/images/avatar-generico.svg" alt="Foto de perfil">
@@ -1107,11 +1175,11 @@
                 <div class="header-menu-perfil">
                     <button type="button" class="header-menu-puntos" onclick="toggleMenuPerfil(event)" aria-label="Abrir menú de perfil">⋮</button>
                     <div class="header-menu-opciones">
-                        <div class="header-menu-cabecera"><span class="header-menu-nombre">Usuario</span></div>
-                        <button type="button" onclick="abrirMensajesApp()">Mensajes</button>
-                        <button type="button" onclick="abrirEditarPerfil()">Editar perfil</button>
-                        <button type="button" class="selector-multiple-roles" onclick="volverASeleccionRoles()">Cambiar perfil</button>
-                        <button type="button" onclick="cerrarSesion()">Cerrar sesión</button>
+                        <div class="header-menu-cabecera"><span class="header-menu-nombre">Menú</span></div>
+                        <button type="button" onclick="abrirMensajesApp()"><svg class="menu-ico" viewBox="0 0 24 24" aria-hidden="true"><rect x="3" y="5.5" width="18" height="13" rx="2.5"/><path d="m3.8 7 7.1 5.4a1.8 1.8 0 0 0 2.2 0L20.2 7"/></svg><span>Mensajes</span></button>
+                        <button type="button" onclick="abrirEditarPerfil()"><svg class="menu-ico" viewBox="0 0 24 24" aria-hidden="true"><path d="M4 20h4L19 9a2.1 2.1 0 0 0-4-4L4 16v4z"/><path d="m13.5 6.5 4 4"/></svg><span>Editar perfil</span></button>
+                        <button type="button" class="selector-multiple-roles" onclick="volverASeleccionRoles()"><svg class="menu-ico" viewBox="0 0 24 24" aria-hidden="true"><path d="M5 8h13m-3-3 3 3-3 3"/><path d="M19 16H6m3-3-3 3 3 3"/></svg><span>Cambiar usuario</span></button>
+                        <button type="button" onclick="cerrarSesion()"><svg class="menu-ico" viewBox="0 0 24 24" aria-hidden="true"><path d="M10 4H6a2 2 0 0 0-2 2v12a2 2 0 0 0 2 2h4"/><path d="m15 8 4 4-4 4M19 12H9"/></svg><span>Cerrar sesión</span></button>
                     </div>
                 </div>
             </div>
@@ -1266,7 +1334,7 @@
         </div>
         <div id="emergency-professional-panel" style="display:none">
             <div class="app-page-toolbar"><div class="app-toolbar-titulo">Solicitudes y pacientes</div>
-                <button type="button" class="app-refresh-button" onclick="cargarMedicoEmergencia()">↻ <span>Actualizar</span></button>
+                <button type="button" data-role="none" class="btn-actualizar" onclick="cargarMedicoEmergencia()" aria-label="Actualizar" title="Actualizar"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M20 11a8 8 0 0 0-14.3-4.9L4 8M4 4v4h4M4 13a8 8 0 0 0 14.3 4.9L20 16M20 20v-4h-4"/></svg><span>Actualizar</span></button>
             </div>
             <div id="emergency-professional-links"></div>
         </div>
@@ -1284,8 +1352,8 @@
             <button type="button" data-role="none" class="perfil-header-volver" onclick="volverInicioSegunRol()" aria-label="Volver"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M15 5l-7 7 7 7"/></svg></button>
             <p class="color-blanco size18 text-center">Mis mensajes</p>
         </div></div>
-        <div class="top-titulos perfil-header-extras">
-            <div class="btn-app4 text-center mt20 mb20" role="button" tabindex="0" onclick="cargarMensajesApp(true)"><img class="pr10" src="src/images/sincro.svg" alt="">Actualizar mensajes</div>
+        <div class="top-titulos perfil-header-extras extras-actualizar">
+            <button type="button" data-role="none" class="btn-actualizar" onclick="cargarMensajesApp(true)" aria-label="Actualizar mensajes" title="Actualizar mensajes"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M20 11a8 8 0 0 0-14.3-4.9L4 8M4 4v4h4M4 13a8 8 0 0 0 14.3 4.9L20 16M20 20v-4h-4"/></svg><span>Actualizar</span></button>
         </div>
     </div>
     <div role="main" class="ui-content mensajes-app-contenido">
@@ -1318,14 +1386,8 @@
             <button type="button" data-role="none" class="perfil-header-volver" onclick="vista('index')" aria-label="Volver"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M15 5l-7 7 7 7"/></svg></button>
             <p class="color-blanco size18 text-center">Mi Ficha Médica Única</p>
         </div></div>
-        <div class="top-titulos perfil-header-extras">
-            <button type="button"
-                            data-role="none"
-                            class="fmu-actualizar mt20 mb20"
-                            onclick="solicitarFmu(true)">
-                        <img src="src/images/sincro.svg" alt="">
-                        <span>Actualizar datos</span>
-                    </button>
+        <div class="top-titulos perfil-header-extras extras-actualizar">
+            <button type="button" data-role="none" class="btn-actualizar" onclick="solicitarFmu(true)" aria-label="Actualizar datos" title="Actualizar datos"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M20 11a8 8 0 0 0-14.3-4.9L4 8M4 4v4h4M4 13a8 8 0 0 0 14.3 4.9L20 16M20 20v-4h-4"/></svg><span>Actualizar</span></button>
         </div>
     </div>
     <div role="main" class="ui-content">
@@ -1389,13 +1451,34 @@
             </div>
         </div>
         <div class="row">
-            <div class="col-xs-12 mt20">
+            <div class="col-xs-12 fmu-col-compacta">
+                <div class="card-button fmu-atenciones-card" id="fmu_atenciones">
+                    <button type="button" data-role="none" class="fmu-acordeon-header" id="fmu_atenciones_toggle" aria-expanded="false" aria-controls="fmu_atenciones_cuerpo" onclick="alternarAtencionesFMU()">
+                        <span class="fmu-acordeon-titulos">
+                            <span class="card-title size16">Historial de atenciones</span>
+                            <span class="fecha-small">Tus últimas 7 atenciones</span>
+                        </span>
+                        <svg class="fmu-acordeon-chevron" viewBox="0 0 24 24" width="20" height="20" aria-hidden="true"><path fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round" d="M6 9l6 6 6-6"/></svg>
+                    </button>
+                    <div class="fmu-acordeon-cuerpo" id="fmu_atenciones_cuerpo" hidden>
+                        <ul class="fmu-atenciones-lista" id="fmu_atenciones_lista"></ul>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <div class="row">
+            <div class="col-xs-12 fmu-col-compacta">
                 <div class="card-button odontograma-fmu-card" id="odontograma_fmu">
-                    <div class="odontograma-fmu-encabezado">
-                        <div>
-                            <h6 class="card-title color-azul size16 mb5">Historial odontológico</h6>
-                            <p class="fecha-small mb10">Toca una pieza para revisar sus atenciones.</p>
-                        </div>
+                    <button type="button" data-role="none" class="fmu-acordeon-header" aria-expanded="false" aria-controls="odontograma_fmu_cuerpo" onclick="alternarOdontogramaFMU()">
+                        <span class="fmu-acordeon-titulos">
+                            <span class="card-title size16">Historial odontológico</span>
+                            <span class="fecha-small">Toca una pieza para revisar sus atenciones</span>
+                        </span>
+                        <svg class="fmu-acordeon-chevron" viewBox="0 0 24 24" width="20" height="20" aria-hidden="true"><path fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round" d="M6 9l6 6 6-6"/></svg>
+                    </button>
+                    <div class="fmu-acordeon-cuerpo" id="odontograma_fmu_cuerpo" hidden>
+                    <div class="odontograma-fmu-simbologia">
+                        <p class="odontograma-maxilar">Maxilar superior</p>
                         <button type="button" class="odontograma-leyenda-btn" onclick="alternarLeyendaOdontograma()">Simbología</button>
                     </div>
                     <div id="odontograma_fmu_leyenda" class="odontograma-fmu-leyenda" style="display:none;">
@@ -1405,31 +1488,21 @@
                         <span><i class="estado-implante"></i>Implante</span>
                         <span><i class="estado-ausente"></i>Ausente</span>
                     </div>
-                    <p class="odontograma-maxilar">Maxilar superior</p>
                     <div id="odontograma_fmu_superior" class="odontograma-fmu-grid"></div>
                     <p class="odontograma-maxilar mt15">Maxilar inferior</p>
                     <div id="odontograma_fmu_inferior" class="odontograma-fmu-grid"></div>
                     <div id="odontograma_fmu_historial" class="odontograma-fmu-historial" style="display:none;"></div>
+                    </div>
                 </div>
             </div>
         </div>
         <div class="row mb90">
-            <div class="col-xs-12 mt20">
-                <div class="card-button" style="min-height:100px;">
-                    <div class="row">
-                        <div class="col-xs-12">
-                            <h6 class="card-title color-rojo size16 mb10">Contacto de emergencia</h6>
-                        </div>
-                        <div class="col-xs-4 text-left">
-                            <p>Nombre<br><span class="fecha-small"></span></p>
-                        </div>
-                        <div class="col-xs-4 text-left">
-                            <p>Parentesco<br><span class="fecha-small"></span></p>
-                        </div>
-                        <div class="col-xs-4 text-left">
-                            <p>Teléfono<br><span class="fecha-small"></span></p>
-                        </div>
+            <div class="col-xs-12 fmu-col-compacta">
+                <div class="card-button fmu-contactos-card">
+                    <div class="fmu-contactos-header">
+                        <h6 class="card-title color-rojo size16">Contactos de emergencia</h6>
                     </div>
+                    <ul class="fmu-contactos-lista" id="fmu_contactos_lista"></ul>
                 </div>
             </div>
         </div>
@@ -1509,8 +1582,8 @@
             <button type="button" data-role="none" class="perfil-header-volver" onclick="vista('recetaonline')" aria-label="Volver"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M15 5l-7 7 7 7"/></svg></button>
             <p class="color-blanco size18 text-center">Mis exámenes</p>
         </div></div>
-        <div class="top-titulos perfil-header-extras">
-            <div class="btn-app4 text-center mt20 mb20" onclick="list_examenes_paciente()"><img class="pr10" src="src/images/sincro.svg">Actualizar exámenes</div>
+        <div class="top-titulos perfil-header-extras extras-actualizar">
+            <button type="button" data-role="none" class="btn-actualizar" onclick="list_examenes_paciente()" aria-label="Actualizar exámenes" title="Actualizar exámenes"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M20 11a8 8 0 0 0-14.3-4.9L4 8M4 4v4h4M4 13a8 8 0 0 0 14.3 4.9L20 16M20 20v-4h-4"/></svg><span>Actualizar</span></button>
         </div>
     </div>
     <div role="main" class="ui-content">
@@ -1544,8 +1617,8 @@
             <button type="button" data-role="none" class="perfil-header-volver" onclick="vista('index')" aria-label="Volver"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M15 5l-7 7 7 7"/></svg></button>
             <p class="color-blanco size18 text-center">Mis recetas</p>
         </div></div>
-        <div class="top-titulos perfil-header-extras">
-            <div class="btn-app4 text-center mt20 mb20" onclick="list_recetas_paciente()"><img class="pr10" src="src/images/sincro.svg">Actualizar recetas</div>
+        <div class="top-titulos perfil-header-extras extras-actualizar">
+            <button type="button" data-role="none" class="btn-actualizar" onclick="list_recetas_paciente()" aria-label="Actualizar recetas" title="Actualizar recetas"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M20 11a8 8 0 0 0-14.3-4.9L4 8M4 4v4h4M4 13a8 8 0 0 0 14.3 4.9L20 16M20 20v-4h-4"/></svg><span>Actualizar</span></button>
         </div>
     </div>
     <div role="main" class="ui-content">
@@ -1576,8 +1649,8 @@
             <button type="button" data-role="none" class="perfil-header-volver" onclick="vista('recetaonline')" aria-label="Volver"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M15 5l-7 7 7 7"/></svg></button>
             <p class="color-blanco size18 text-center">Mis licencias</p>
         </div></div>
-        <div class="top-titulos perfil-header-extras">
-            <div class="btn-app4 text-center mt20 mb20" onclick="list_document_user()"><img class="pr10" src="src/images/sincro.svg">Actualizar licencias</div>
+        <div class="top-titulos perfil-header-extras extras-actualizar">
+            <button type="button" data-role="none" class="btn-actualizar" onclick="list_document_user()" aria-label="Actualizar licencias" title="Actualizar licencias"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M20 11a8 8 0 0 0-14.3-4.9L4 8M4 4v4h4M4 13a8 8 0 0 0 14.3 4.9L20 16M20 20v-4h-4"/></svg><span>Actualizar</span></button>
         </div>
     </div>
     <div role="main" class="ui-content">
@@ -1624,8 +1697,8 @@
             <button type="button" data-role="none" class="perfil-header-volver" onclick="vista('recetaonline')" aria-label="Volver"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M15 5l-7 7 7 7"/></svg></button>
             <p class="color-blanco size18 text-center">Mis consentimientos</p>
         </div></div>
-        <div class="top-titulos perfil-header-extras">
-            <div class="btn-app4 text-center mt20 mb20" onclick="list_consentimientos()"><img class="pr10" src="src/images/sincro.svg">Actualizar consentimientos</div>
+        <div class="top-titulos perfil-header-extras extras-actualizar">
+            <button type="button" data-role="none" class="btn-actualizar" onclick="list_consentimientos()" aria-label="Actualizar consentimientos" title="Actualizar consentimientos"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M20 11a8 8 0 0 0-14.3-4.9L4 8M4 4v4h4M4 13a8 8 0 0 0 14.3 4.9L20 16M20 20v-4h-4"/></svg><span>Actualizar</span></button>
         </div>
     </div>
     <div role="main" class="ui-content">
@@ -1659,14 +1732,8 @@
             <button type="button" data-role="none" class="perfil-header-volver" onclick="vista('recetaonline')" aria-label="Volver"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M15 5l-7 7 7 7"/></svg></button>
             <p class="color-blanco size18 text-center">Mis documentos</p>
         </div></div>
-        <div class="top-titulos perfil-header-extras">
-            <button type="button"
-                            data-role="none"
-                            class="documentos-actualizar mt20 mb20"
-                            onclick="list_document_user()">
-                        <img src="src/images/sincro.svg" alt="">
-                        <span>Actualizar documentos</span>
-                    </button>
+        <div class="top-titulos perfil-header-extras extras-actualizar">
+            <button type="button" data-role="none" class="btn-actualizar" onclick="list_document_user()" aria-label="Actualizar documentos" title="Actualizar documentos"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M20 11a8 8 0 0 0-14.3-4.9L4 8M4 4v4h4M4 13a8 8 0 0 0 14.3 4.9L20 16M20 20v-4h-4"/></svg><span>Actualizar</span></button>
         </div>
     </div>
     <div role="main" class="ui-content">
@@ -1844,7 +1911,7 @@
         </div>
         <div class="app-page-toolbar">
             <div class="app-toolbar-titulo">Solicitudes pendientes</div>
-            <button type="button" class="app-refresh-button" onclick="cargarDesafiosAcceso()">↻ <span>Actualizar</span></button>
+            <button type="button" data-role="none" class="btn-actualizar" onclick="cargarDesafiosAcceso()" aria-label="Actualizar" title="Actualizar"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M20 11a8 8 0 0 0-14.3-4.9L4 8M4 4v4h4M4 13a8 8 0 0 0 14.3 4.9L20 16M20 20v-4h-4"/></svg><span>Actualizar</span></button>
         </div>
         <div id="lista-desafios-acceso"></div>
     </div>
@@ -2236,7 +2303,7 @@
             <img id="perfil_menu_foto" src="src/images/avatar-generico.svg" alt="Foto de perfil">
             <div class="perfil-app-tarjeta-datos">
                 <p class="perfil-app-tarjeta-nombre" id="perfil_menu_nombre">Nombre Apellido</p>
-                <p class="perfil-app-tarjeta-rut" id="perfil_menu_rut">RUT</p>
+                <p class="perfil-app-tarjeta-rut" id="perfil_menu_rut">RUT:</p>
             </div>
         </div>
         <nav class="perfil-app-menu" aria-label="Opciones de mi perfil">
@@ -2301,48 +2368,77 @@
         </div>
         <section class="perfil-app-seccion perfil-app-datos" data-panel="datos">
             <h3>Información personal</h3>
-            <label>RUT</label>
-            <input type="text" id="perfil_app_rut" readonly>
-            <label>Nombres</label>
-            <input type="text" id="perfil_app_nombres">
-            <label>Primer apellido</label>
-            <input type="text" id="perfil_app_apellido_uno">
-            <label>Segundo apellido</label>
-            <input type="text" id="perfil_app_apellido_dos">
-            <label>Teléfono principal</label>
-            <input type="tel" id="perfil_app_telefono_uno">
-            <label>Teléfono secundario</label>
-            <input type="tel" id="perfil_app_telefono_dos">
-            <label>Correo electrónico</label>
-            <input type="email" id="perfil_app_email" readonly>
+            <div class="campo-flotante">
+                <label class="floating-label-activo">RUT</label>
+                <input type="text" id="perfil_app_rut" readonly>
+            </div>
+            <div class="campo-flotante">
+                <label class="floating-label-activo">Nombres</label>
+                <input type="text" id="perfil_app_nombres">
+            </div>
+            <div class="campo-flotante">
+                <label class="floating-label-activo">Primer apellido</label>
+                <input type="text" id="perfil_app_apellido_uno">
+            </div>
+            <div class="campo-flotante">
+                <label class="floating-label-activo">Segundo apellido</label>
+                <input type="text" id="perfil_app_apellido_dos">
+            </div>
+            <div class="campo-flotante">
+                <label class="floating-label-activo">Teléfono principal</label>
+                <input type="tel" id="perfil_app_telefono_uno">
+            </div>
+            <div class="campo-flotante">
+                <label class="floating-label-activo">Teléfono secundario</label>
+                <input type="tel" id="perfil_app_telefono_dos">
+            </div>
+            <div class="campo-flotante">
+                <label class="floating-label-activo">Correo electrónico</label>
+                <input type="email" id="perfil_app_email" readonly>
+            </div>
             <small class="color-gris">El correo se muestra sólo como referencia.</small>
             <div class="btn-app7 mt20" onclick="guardarPerfilApp()">Guardar cambios</div>
         </section>
         <section class="perfil-app-seccion perfil-app-seguridad-card" data-panel="pin">
-            <h3><span class="perfil-app-seguridad-icono">🔐</span>Cambiar PIN del dispositivo</h3>
+            <h3>Cambiar PIN del dispositivo</h3>
             <p class="perfil-app-ayuda">La clave es el PIN de 4 dígitos usado para autorizar solicitudes desde este equipo.</p>
-            <label>Clave actual</label>
-            <input type="password" id="perfil_app_clave_actual" inputmode="numeric" maxlength="4" autocomplete="off">
-            <label>Nueva clave</label>
-            <input type="password" id="perfil_app_clave_nueva" inputmode="numeric" maxlength="4" autocomplete="new-password">
-            <label>Confirmar nueva clave</label>
-            <input type="password" id="perfil_app_clave_confirmacion" inputmode="numeric" maxlength="4" autocomplete="new-password">
+            <div class="campo-flotante">
+                <label class="floating-label-activo">Clave actual</label>
+                <input type="password" id="perfil_app_clave_actual" inputmode="numeric" maxlength="4" autocomplete="off">
+                <button type="button" data-role="none" class="campo-ojo" onclick="verClavePerfil('perfil_app_clave_actual', this)" aria-label="Mostrar contraseña"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M2.5 12S6 5.5 12 5.5 21.5 12 21.5 12 18 18.5 12 18.5 2.5 12 2.5 12z"/><circle cx="12" cy="12" r="3"/></svg></button>
+            </div>
+            <div class="campo-flotante">
+                <label class="floating-label-activo">Nueva clave</label>
+                <input type="password" id="perfil_app_clave_nueva" inputmode="numeric" maxlength="4" autocomplete="new-password">
+                <button type="button" data-role="none" class="campo-ojo" onclick="verClavePerfil('perfil_app_clave_nueva', this)" aria-label="Mostrar contraseña"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M2.5 12S6 5.5 12 5.5 21.5 12 21.5 12 18 18.5 12 18.5 2.5 12 2.5 12z"/><circle cx="12" cy="12" r="3"/></svg></button>
+            </div>
+            <div class="campo-flotante">
+                <label class="floating-label-activo">Confirmar nueva clave</label>
+                <input type="password" id="perfil_app_clave_confirmacion" inputmode="numeric" maxlength="4" autocomplete="new-password">
+                <button type="button" data-role="none" class="campo-ojo" onclick="verClavePerfil('perfil_app_clave_confirmacion', this)" aria-label="Mostrar contraseña"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M2.5 12S6 5.5 12 5.5 21.5 12 21.5 12 18 18.5 12 18.5 2.5 12 2.5 12z"/><circle cx="12" cy="12" r="3"/></svg></button>
+            </div>
             <div class="btn-app7 mt20" onclick="cambiarClaveDispositivoApp()">Cambiar clave</div>
         </section>
         <section class="perfil-app-seccion perfil-app-seguridad-card" id="perfil_app_biometria" data-panel="huella-documentos">
-            <h3><span class="perfil-app-seguridad-icono">☝</span>Huella para autorizar documentos</h3>
+            <h3>Huella para autorizar documentos</h3>
             <p id="perfil_app_biometria_estado" class="perfil-app-ayuda">Comprobando disponibilidad biométrica...</p>
             <p class="perfil-app-ayuda">Permite aprobar solicitudes y documentos usando la huella registrada en Android.</p>
-            <label>PIN actual de este dispositivo</label>
-            <input type="password" id="perfil_app_biometria_pin" inputmode="numeric" maxlength="4" autocomplete="off">
+            <div class="campo-flotante">
+                <label class="floating-label-activo">PIN actual de este dispositivo</label>
+                <input type="password" id="perfil_app_biometria_pin" inputmode="numeric" maxlength="4" autocomplete="off">
+                <button type="button" data-role="none" class="campo-ojo" onclick="verClavePerfil('perfil_app_biometria_pin', this)" aria-label="Mostrar contraseña"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M2.5 12S6 5.5 12 5.5 21.5 12 21.5 12 18 18.5 12 18.5 2.5 12 2.5 12z"/><circle cx="12" cy="12" r="3"/></svg></button>
+            </div>
             <div id="perfil_app_biometria_activar" class="btn-app7 mt10" onclick="activarBiometriaApp()">Activar huella digital</div>
             <div id="perfil_app_biometria_desactivar" class="btn-app4 mt10" onclick="desactivarBiometriaApp()" style="display:none">Desactivar huella digital</div>
         </section>
         <section class="perfil-app-seccion perfil-app-seguridad-card" data-panel="huella-login">
-            <h3><span class="perfil-app-seguridad-icono">👆</span>Inicio de sesión con huella</h3>
+            <h3>Inicio de sesión con huella</h3>
             <p id="perfil_app_biometria_login_estado" class="perfil-app-ayuda">El ingreso biométrico está desactivado.</p>
-            <label>Contraseña de tu cuenta</label>
-            <input type="password" id="perfil_app_password_login" autocomplete="current-password">
+            <div class="campo-flotante">
+                <label class="floating-label-activo">Contraseña de tu cuenta</label>
+                <input type="password" id="perfil_app_password_login" autocomplete="current-password">
+                <button type="button" data-role="none" class="campo-ojo" onclick="verClavePerfil('perfil_app_password_login', this)" aria-label="Mostrar contraseña"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M2.5 12S6 5.5 12 5.5 21.5 12 21.5 12 18 18.5 12 18.5 2.5 12 2.5 12z"/><circle cx="12" cy="12" r="3"/></svg></button>
+            </div>
             <div id="perfil_app_biometria_login_activar" class="btn-app7 mt10" onclick="activarLoginBiometricoApp()">Activar ingreso con huella</div>
             <div id="perfil_app_biometria_login_desactivar" class="btn-app4 mt10" onclick="desactivarLoginBiometricoApp()" style="display:none">Desactivar ingreso con huella</div>
         </section>
@@ -2364,25 +2460,29 @@
     </div>
     <div role="main" class="ui-content citas-contenido">
         <div class="citas-filtros-wrap">
-            <div class="citas-filtros-cabecera">
-                <button type="button" data-role="none" class="citas-actualizar" onclick="solicitarMisHorasMedicas(true)">
-                    ↻ <span>Actualizar</span>
+
+            <div class="citas-listado-cabecera">
+                <p class="citas-listado-titulo">Citas agendadas</p>
+                <div class="cabecera-acciones">
+                <button type="button" data-role="none" class="btn-actualizar" onclick="solicitarMisHorasMedicas(true)" aria-label="Actualizar citas" title="Actualizar citas"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M20 11a8 8 0 0 0-14.3-4.9L4 8M4 4v4h4M4 13a8 8 0 0 0 14.3 4.9L20 16M20 20v-4h-4"/></svg><span>Actualizar</span></button>
+                <button type="button" data-role="none" class="filtro-boton" id="citas_btn_filtro" onclick="abrirFiltroCitas()" aria-haspopup="dialog">
+                    <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 7h10M18 7h2M4 17h4M12 17h8"/><circle cx="16" cy="7" r="2"/><circle cx="10" cy="17" r="2"/></svg>
+                    <span>Filtro</span>
                 </button>
+                </div>
             </div>
 
-            <div class="citas-filtros" role="tablist" aria-label="Filtros de citas">
-                <button type="button" data-role="none" class="citas-filtro active" data-filtro="todas" onclick="cambiarFiltroCitas('todas')">
-                    Todas <span id="citas-contador-todas" class="citas-filtro-contador">0</span>
-                </button>
-                <button type="button" data-role="none" class="citas-filtro" data-filtro="reservadas" onclick="cambiarFiltroCitas('reservadas')">
-                    Por confirmar <span id="citas-contador-reservadas" class="citas-filtro-contador">0</span>
-                </button>
-                <button type="button" data-role="none" class="citas-filtro" data-filtro="confirmadas" onclick="cambiarFiltroCitas('confirmadas')">
-                    Confirmadas <span id="citas-contador-confirmadas" class="citas-filtro-contador">0</span>
-                </button>
-                <button type="button" data-role="none" class="citas-filtro" data-filtro="otras" onclick="cambiarFiltroCitas('otras')">
-                    Otras <span id="citas-contador-otras" class="citas-filtro-contador">0</span>
-                </button>
+            <div class="filtro-sheet" id="citas_filtro_sheet">
+                <div class="perfil-sheet-fondo" onclick="cerrarFiltroCitas()"></div>
+                <div class="perfil-sheet" role="dialog" aria-label="Filtrar citas">
+                    <p class="filtro-sheet-titulo">Filtrar por estado</p>
+                    <div class="citas-filtros" role="group" aria-label="Filtros de citas">
+                        <button type="button" data-role="none" class="citas-filtro active" data-filtro="todas" onclick="cambiarFiltroCitas('todas')">Todas <span id="citas-contador-todas" class="citas-filtro-contador">0</span><svg class="autorizaciones-filtro-check" viewBox="0 0 24 24" aria-hidden="true"><path d="M5 12.5l4.5 4.5L19 7.5"/></svg></button>
+                        <button type="button" data-role="none" class="citas-filtro" data-filtro="reservadas" onclick="cambiarFiltroCitas('reservadas')">Por confirmar <span id="citas-contador-reservadas" class="citas-filtro-contador">0</span><svg class="autorizaciones-filtro-check" viewBox="0 0 24 24" aria-hidden="true"><path d="M5 12.5l4.5 4.5L19 7.5"/></svg></button>
+                        <button type="button" data-role="none" class="citas-filtro" data-filtro="confirmadas" onclick="cambiarFiltroCitas('confirmadas')">Confirmadas <span id="citas-contador-confirmadas" class="citas-filtro-contador">0</span><svg class="autorizaciones-filtro-check" viewBox="0 0 24 24" aria-hidden="true"><path d="M5 12.5l4.5 4.5L19 7.5"/></svg></button>
+                        <button type="button" data-role="none" class="citas-filtro" data-filtro="otras" onclick="cambiarFiltroCitas('otras')">Otras <span id="citas-contador-otras" class="citas-filtro-contador">0</span><svg class="autorizaciones-filtro-check" viewBox="0 0 24 24" aria-hidden="true"><path d="M5 12.5l4.5 4.5L19 7.5"/></svg></button>
+                    </div>
+                </div>
             </div>
 
             <p id="citas-filtro-resumen" class="citas-filtro-resumen"></p>
@@ -2419,10 +2519,10 @@
         <div class="clave-card">
             <div class="clave-icono"><svg viewBox="0 0 24 24" aria-hidden="true"><rect x="4" y="10" width="16" height="11" rx="2.5"/><path d="M8 10V7a4 4 0 0 1 8 0v3"/><circle cx="12" cy="15.5" r="1.2"/></svg></div>
             <h2 class="clave-titulo">Crea tu clave de desbloqueo</h2>
-            <p class="clave-texto">Para registrar este equipo define una clave de 4 dígitos. Con ella podrás desbloquear la app y validar tus solicitudes.</p>
+            <p class="clave-texto">Crea una clave de 4 dígitos para desbloquear la app y validar tus solicitudes.</p>
             <label for="password_desbloqueo">Clave de 4 dígitos</label>
             <input type="password" data-role="none" id="password_desbloqueo" class="clave-input" inputmode="numeric" pattern="[0-9]*" maxlength="4" autocomplete="new-password" placeholder="••••">
-            <small class="clave-ayuda">Usa solo números y evita fechas de nacimiento o secuencias como 1234.</small>
+            <small class="clave-ayuda">Usa solo números y evita combinaciones fáciles de adivinar, como fechas de nacimiento o secuencias (1234).</small>
             <div class="btn-app7" onclick="registrarPassword()">Registrar equipo</div>
         </div>
     </div>
@@ -2457,58 +2557,41 @@
     <div role="main" class="ui-content">
         <div class="row">
             <div class="col-xs-12">
-                <button type="button" class="autorizaciones-actualizar" onclick="list_log_device()">
-                    <span class="autorizaciones-actualizar-icono">↻</span>
-                    <span><strong>Actualizar peticiones</strong><small>Buscar nuevas solicitudes</small></span>
-                </button>
-            </div>
-        </div>
-        <div class="row">
-            <div class="col-xs-12">
                 <div class="sdi-tab-content active" id="content_autorizaciones">
                     <div class="autorizaciones-listado-cabecera">
-                        <div>
-                            <p class="autorizaciones-listado-titulo">Autorizaciones recibidas</p>
-                            <small class="autorizaciones-listado-ayuda">Filtra tus solicitudes por estado.</small>
+                        <p class="autorizaciones-listado-titulo">Autorizaciones recibidas</p>
+                        <div class="cabecera-acciones">
+                        <button type="button" data-role="none" class="btn-actualizar" onclick="list_log_device()" aria-label="Actualizar peticiones" title="Actualizar peticiones"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M20 11a8 8 0 0 0-14.3-4.9L4 8M4 4v4h4M4 13a8 8 0 0 0 14.3 4.9L20 16M20 20v-4h-4"/></svg><span>Actualizar</span></button>
+                        <button type="button" data-role="none" class="filtro-boton con-filtro" id="autorizaciones_btn_filtro" onclick="abrirFiltroAutorizaciones()" aria-haspopup="dialog">
+                            <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 7h10M18 7h2M4 17h4M12 17h8"/><circle cx="16" cy="7" r="2"/><circle cx="10" cy="17" r="2"/></svg>
+                            <span id="autorizaciones_filtro_actual">Filtro</span>
+                        </button>
                         </div>
                     </div>
 
-                    <div class="autorizaciones-filtros" role="group" aria-label="Filtrar autorizaciones">
-                        <button type="button"
-                                data-role="none"
-                                class="autorizaciones-filtro"
-                                data-filtro="todas"
-                                onclick="filtrarAutorizaciones('todas')">
-                            Todas
-                            <span id="autorizaciones_count_todas" class="autorizaciones-filtro-contador">0</span>
-                        </button>
-
-                        <button type="button"
-                                data-role="none"
-                                class="autorizaciones-filtro active"
-                                data-filtro="pendientes"
-                                onclick="filtrarAutorizaciones('pendientes')">
-                            Pendientes
-                            <span id="autorizaciones_count_pendientes" class="autorizaciones-filtro-contador">0</span>
-                        </button>
-
-                        <button type="button"
-                                data-role="none"
-                                class="autorizaciones-filtro"
-                                data-filtro="aprobadas"
-                                onclick="filtrarAutorizaciones('aprobadas')">
-                            Aprobadas
-                            <span id="autorizaciones_count_aprobadas" class="autorizaciones-filtro-contador">0</span>
-                        </button>
-
-                        <button type="button"
-                                data-role="none"
-                                class="autorizaciones-filtro"
-                                data-filtro="rechazadas"
-                                onclick="filtrarAutorizaciones('rechazadas')">
-                            Rechazadas
-                            <span id="autorizaciones_count_rechazadas" class="autorizaciones-filtro-contador">0</span>
-                        </button>
+                    <div class="filtro-sheet" id="autorizaciones_filtro_sheet">
+                        <div class="perfil-sheet-fondo" onclick="cerrarFiltroAutorizaciones()"></div>
+                        <div class="perfil-sheet" role="dialog" aria-label="Filtrar autorizaciones">
+                            <p class="filtro-sheet-titulo">Filtrar por estado</p>
+                            <div class="autorizaciones-filtros" role="group" aria-label="Filtrar autorizaciones">
+                            <button type="button" data-role="none" class="autorizaciones-filtro" data-filtro="todas" onclick="filtrarAutorizaciones('todas')">
+                                Todas
+                                <span id="autorizaciones_count_todas" class="autorizaciones-filtro-contador">0</span><svg class="autorizaciones-filtro-check" viewBox="0 0 24 24" aria-hidden="true"><path d="M5 12.5l4.5 4.5L19 7.5"/></svg>
+                            </button>
+                            <button type="button" data-role="none" class="autorizaciones-filtro active" data-filtro="pendientes" onclick="filtrarAutorizaciones('pendientes')">
+                                Pendientes
+                                <span id="autorizaciones_count_pendientes" class="autorizaciones-filtro-contador">0</span><svg class="autorizaciones-filtro-check" viewBox="0 0 24 24" aria-hidden="true"><path d="M5 12.5l4.5 4.5L19 7.5"/></svg>
+                            </button>
+                            <button type="button" data-role="none" class="autorizaciones-filtro" data-filtro="aprobadas" onclick="filtrarAutorizaciones('aprobadas')">
+                                Aprobadas
+                                <span id="autorizaciones_count_aprobadas" class="autorizaciones-filtro-contador">0</span><svg class="autorizaciones-filtro-check" viewBox="0 0 24 24" aria-hidden="true"><path d="M5 12.5l4.5 4.5L19 7.5"/></svg>
+                            </button>
+                            <button type="button" data-role="none" class="autorizaciones-filtro" data-filtro="rechazadas" onclick="filtrarAutorizaciones('rechazadas')">
+                                Rechazadas
+                                <span id="autorizaciones_count_rechazadas" class="autorizaciones-filtro-contador">0</span><svg class="autorizaciones-filtro-check" viewBox="0 0 24 24" aria-hidden="true"><path d="M5 12.5l4.5 4.5L19 7.5"/></svg>
+                            </button>
+                            </div>
+                        </div>
                     </div>
 
                     <p id="autorizaciones_filtro_resumen" class="autorizaciones-filtro-resumen"></p>

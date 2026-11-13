@@ -4,6 +4,17 @@ var historial_index = 0;
 var historial_pages = [];
 
 document.addEventListener("deviceready", onDeviceReady, false);
+
+// Si la foto de un profesional no carga, se muestra la imagen por defecto.
+// Usa data-fallback cuando existe; si no, la imagen genérica de profesional.
+document.addEventListener('error', function (evento) {
+    var img = evento.target;
+    if (!img || img.tagName !== 'IMG' || img.dataset.fallbackAplicado === '1') return;
+    var src = img.getAttribute('src') || '';
+    if (!img.dataset.fallback && src.indexOf('/storage/') === -1) return;
+    img.dataset.fallbackAplicado = '1';
+    img.src = img.dataset.fallback || 'src/images/ejemplo_dr.jpg';
+}, true);
 window.onscroll = () => { headerFixed(); };
 window.onload = () =>{
     init('login','none');
@@ -47,6 +58,10 @@ const manejarBotonAtrasApp = (event) => {
     const pagina = $.mobile && $.mobile.activePage ? $.mobile.activePage.attr('id') : '';
     if (pagina === 'control-reposo-paciente' || pagina === 'control-reposo-profesional') {
         if (event) event.preventDefault();
+        if ($('#reposo_config_sidebar').hasClass('abierto')) {
+            cerrar_config_reposo();
+            return;
+        }
         volverInicioSegunRol();
     }
 };
@@ -588,8 +603,22 @@ const abrirControlReposoProfesional = () => {
         volverInicioSegunRol();
         return;
     }
+    cerrar_config_reposo();
     vista('control-reposo-profesional', 'fade');
     cargar_controles_reposo();
+};
+
+// Sidebar de configuración del control de reposo (profesional)
+const abrir_config_reposo = () => {
+    $('#reposo_config_fondo, #reposo_config_sidebar').addClass('abierto');
+    $('#reposo_config_sidebar').attr('aria-hidden', 'false');
+    $('#control-reposo-profesional').addClass('reposo-sidebar-abierto');
+};
+
+const cerrar_config_reposo = () => {
+    $('#reposo_config_fondo, #reposo_config_sidebar').removeClass('abierto');
+    $('#reposo_config_sidebar').attr('aria-hidden', 'true');
+    $('#control-reposo-profesional').removeClass('reposo-sidebar-abierto');
 };
 
 let controlReposoPacienteSeleccionado = null;
@@ -626,7 +655,7 @@ const buscar_pacientes_reposo = () => {
 const seleccionar_paciente_reposo = (paciente) => {
     controlReposoPacienteSeleccionado = paciente;
     $('#reposo_licencia_id').val(paciente.license_id);
-    $('#reposo_paciente_resumen').text(`${paciente.name} (${paciente.rut})`);
+    $('#reposo_paciente_resumen, #reposo_paciente_sidebar').text(`${paciente.name} (${paciente.rut})`);
     $('#reposo_fecha_resumen').text(paciente.ends_at || 'Sin fecha configurada');
     $('#reposo_direccion').val(paciente.address || '');
     $('#reposo_resultados_pacientes .reposo-paciente-opcion').removeClass('seleccionado');

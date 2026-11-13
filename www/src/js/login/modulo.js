@@ -474,3 +474,131 @@ const recuperarPassword = () =>{
         },
         "POST");
 }
+
+
+/* ===================== RECUPERAR CONTRASEÑA ===================== */
+
+let recuperarEnviando = false;
+
+const cambiarPanelLogin = (mostrar, ocultar) => {
+    $(ocultar).hide();
+    $(mostrar).stop(true, true).fadeIn(180);
+    $('html, body').scrollTop(0);
+};
+
+const mostrarRecuperarContrasena = () => {
+    // Si el usuario ya escribió su correo en el login, se reutiliza.
+    const emailLogin = $.trim($('#user').val());
+    if (emailLogin !== '' && $.trim($('#recuperar_email').val()) === '') {
+        $('#recuperar_email').val(emailLogin);
+    }
+
+    $('#recuperar_enviado').hide();
+    $('#recuperar_formulario').show();
+    cambiarPanelLogin('#cont_i_recuperar', '#cont_i_login');
+    setTimeout(function () { $('#recuperar_email').focus(); }, 200);
+};
+
+const volverLoginDesdeRecuperar = () => {
+    const email = $.trim($('#recuperar_email').val());
+    if (email !== '' && $.trim($('#user').val()) === '') {
+        $('#user').val(email);
+    }
+    cambiarPanelLogin('#cont_i_login', '#cont_i_recuperar');
+};
+
+const reintentarRecuperarContrasena = () => {
+    $('#recuperar_enviado').hide();
+    $('#recuperar_formulario').stop(true, true).fadeIn(180);
+};
+
+const validarEmailRecuperar = (email) => /^[^\s@]+@[^\s@]+\.[^\s@]{2,}$/.test(email);
+
+const enviarRecuperarContrasena = () => {
+    if (recuperarEnviando) return false;
+
+    const email = $.trim($('#recuperar_email').val()).toLowerCase();
+
+    if (email === '') {
+        msg('Recuperar contraseña', 'Debe ingresar el correo electrónico de su cuenta', 'warning');
+        $('#recuperar_email').focus();
+        return false;
+    }
+
+    if (!validarEmailRecuperar(email)) {
+        msg('Recuperar contraseña', 'El correo electrónico ingresado no es válido', 'warning');
+        $('#recuperar_email').focus().select();
+        return false;
+    }
+
+    const boton = $('#recuperar_boton');
+    recuperarEnviando = true;
+    boton.prop('disabled', true);
+    cargando(1);
+
+    const finalizar = () => {
+        recuperarEnviando = false;
+        boton.prop('disabled', false);
+        cargando(0);
+    };
+
+    const api = new Api('user', 'recuperar_contrasena');
+    api.request(
+        { email: email },
+        function (resp) {
+            finalizar();
+
+            if (resp && resp.estado == 1) {
+                $('#recuperar_email_enviado').text(email);
+                $('#recuperar_formulario').hide();
+                $('#recuperar_enviado').stop(true, true).fadeIn(180);
+                return;
+            }
+
+            msg(
+                'Recuperar contraseña',
+                (resp && resp.msj) || 'No fue posible enviar el correo de recuperación. Intente nuevamente.',
+                'error'
+            );
+        },
+        function (resp) {
+            finalizar();
+            const httpStatus = resp && typeof resp.status !== 'undefined' ? resp.status : 0;
+            const respJson = resp && resp.responseJSON ? resp.responseJSON : null;
+
+            if (httpStatus === 429) {
+                msg('Recuperar contraseña', 'Has realizado demasiadas solicitudes. Espera unos minutos e intenta nuevamente.', 'warning');
+                return;
+            }
+
+            msg(
+                'Recuperar contraseña',
+                (respJson && respJson.msj) || (httpStatus
+                    ? 'Error de conexión (HTTP ' + httpStatus + ')'
+                    : 'Error de conexión. Revisa tu conexión a Internet e intenta nuevamente.'),
+                'error'
+            );
+        },
+        'POST'
+    );
+};
+
+$(document).on('keydown', '#recuperar_email', function (e) {
+    if (e.key === 'Enter') {
+        e.preventDefault();
+        enviarRecuperarContrasena();
+    }
+});
+
+$(document).on('keydown', '#login .login-recuperar', function (e) {
+    if (e.key === 'Enter' || e.key === ' ') {
+        e.preventDefault();
+        $(this).trigger('click');
+    }
+});
+
+// Al volver a la página de login siempre se muestra el formulario de ingreso.
+$(document).on('pagebeforeshow', '#login', function () {
+    $('#cont_i_recuperar').hide();
+    $('#cont_i_login').show();
+});

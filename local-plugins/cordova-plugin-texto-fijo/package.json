@@ -1,0 +1,16 @@
+{
+  "name": "cordova-plugin-texto-fijo",
+  "version": "1.0.0",
+  "description": "Ignora el tamaño de fuente del sistema Android para que el diseño de la app no se desordene.",
+  "cordova": {
+    "id": "cordova-plugin-texto-fijo",
+    "platforms": [
+      "android"
+    ]
+  },
+  "keywords": [
+    "ecosystem:cordova",
+    "cordova-android"
+  ],
+  "license": "Apache-2.0"
+}

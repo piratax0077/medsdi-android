@@ -6,7 +6,8 @@
  */
    function msg(titulo,texto,tipo,id_position) {
 
-    if(id_position==undefined)
+    // Todas las notificaciones se muestran abajo (posición 1, centrada por CSS),
+    // sin importar la posición que se pida.
     id_position = 1;
 
     var position = ['bottom-left', 'bottom-right', 'bottom-center', 'top-left', 'top-right', 'top-center', 'mid-center'];

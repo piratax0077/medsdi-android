@@ -22,7 +22,8 @@
     "cordova-plugin-firebasex-core": "^2.0.0",
     "cordova-plugin-firebasex-messaging": "^2.0.1",
     "cordova-plugin-geolocation": "^5.0.0",
-    "cordova-plugin-inappbrowser": "^6.0.0"
+    "cordova-plugin-inappbrowser": "^6.0.0",
+    "cordova-plugin-texto-fijo": "file:local-plugins/cordova-plugin-texto-fijo"
   },
   "cordova": {
     "platforms": [
@@ -31,12 +32,18 @@
     ],
     "plugins": {
       "cordova-plugin-inappbrowser": {},
-      "cordova-plugin-firebasex-core": {},
+      "cordova-plugin-firebasex-core": {
+        "ANDROID_FIREBASE_CORE_VERSION": "21.1.1",
+        "ANDROID_FIREBASE_INSTALLATIONS_VERSION": "19.1.0",
+        "ANDROID_GSON_VERSION": "2.14.0"
+      },
       "cordova-plugin-firebasex-messaging": {
         "FIREBASE_FCM_AUTOINIT_ENABLED": "true",
         "FIREBASE_MESSAGING_IMMEDIATE_PAYLOAD_DELIVERY": "false",
         "IOS_FCM_ENABLED": "true",
-        "IOS_ENABLE_CRITICAL_ALERTS_ENABLED": "false"
+        "IOS_ENABLE_CRITICAL_ALERTS_ENABLED": "false",
+        "ANDROID_ICON_ACCENT": "#FFFFFF",
+        "ANDROID_FIREBASE_MESSAGING_VERSION": "25.0.2"
       },
       "cordova-plugin-dialogs": {},
       "cordova-plugin-fingerprint-aio": {},
@@ -47,7 +54,8 @@
         "ANDROIDX_CORE_VERSION": "1.6.+",
         "GPS_REQUIRED": "true"
       },
-      "cordova-plugin-device": {}
+      "cordova-plugin-device": {},
+      "cordova-plugin-texto-fijo": {}
     }
   },
   "dependencies": {

@@ -222,7 +222,6 @@ const actualizarHeaderUsuario = () => {
         ? partes[0] + ' ' + partes[partes.length - 1].charAt(0).toUpperCase() + '.'
         : partes[0];
     $('.header .row h2 span, .dashboard-user h2 span').text(nombreCorto).attr('title', nombre);
-    $('.header-menu-nombre').text(nombreCorto);
     // Rol visible sobre el nombre en los encabezados interiores (se dibuja por CSS).
     $('.header .row h2').attr('data-rol', localStorage.getItem('rolActivo') === 'Profesional' ? 'Profesional' : 'Paciente');
     $('.header .row h2 img, .dashboard-user h2 img').attr('src', foto_perfil);

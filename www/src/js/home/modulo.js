@@ -98,6 +98,23 @@ var homeResumenTimer = null;
 
 const fechaIsoCita = (hora) => String(hora && hora.fecha_consulta || '').slice(0, 10);
 
+// Estados de horas_medicas (tabla parametros, referencia Agenda_Estado) que
+// corresponden a horas anuladas/canceladas y no deben mostrarse ni contarse:
+// 3 = Rechazada (la usa "Anular hora" del paciente), 14 = Bloqueo anulado,
+// 13 = Bloqueo por profesional, 15 = Hora anulada por profesional.
+// También se descarta por el nombre del estado.
+const ESTADOS_HORA_ANULADA = [3, 13, 14, 15];
+
+const esHoraAnulada = (hora) => {
+    if (!hora) return true;
+    if (ESTADOS_HORA_ANULADA.indexOf(Number(hora.id_estado)) !== -1) return true;
+    return /anulad|cancelad|rechazad/i.test(String(hora.estado || ''));
+};
+
+const horasVigentes = (horas) => (Array.isArray(horas) ? horas : []).filter(function(hora) {
+    return !esHoraAnulada(hora);
+});
+
 const fechaCortaHome = (iso) => {
     var p = String(iso).split('-');
     return p.length === 3 ? p[2] + '/' + p[1] + '/' + p[0] : iso;
@@ -107,7 +124,7 @@ const construirSlidesHome = (horas) => {
     var hoy = new Date();
     var hoyIso = hoy.getFullYear() + '-' + ('0' + (hoy.getMonth() + 1)).slice(-2) + '-' + ('0' + hoy.getDate()).slice(-2);
 
-    var vigentes = (horas || []).filter(function(h) {
+    var vigentes = horasVigentes(horas).filter(function(h) {
         return [1, 2].indexOf(Number(h.id_estado)) !== -1 && fechaIsoCita(h) >= hoyIso;
     }).sort(function(a, b) {
         return (fechaIsoCita(a) + (a.hora_inicio || '')).localeCompare(fechaIsoCita(b) + (b.hora_inicio || ''));
@@ -178,9 +195,7 @@ const construirSlidesProfesional = (agenda, pendientes) => {
     var ahora = new Date();
     var horaActual = ('0' + ahora.getHours()).slice(-2) + ':' + ('0' + ahora.getMinutes()).slice(-2);
 
-    var atenciones = (agenda || []).filter(function(h) {
-        return !/anulad|cancelad|rechazad/i.test(String(h.estado || ''));
-    }).sort(function(a, b) {
+    var atenciones = horasVigentes(agenda).sort(function(a, b) {
         return String(a.hora_inicio || '').localeCompare(String(b.hora_inicio || ''));
     });
     var proxima = atenciones.filter(function(h) {
@@ -201,8 +216,8 @@ const construirSlidesProfesional = (agenda, pendientes) => {
     }
 
     var slideSolicitudes = {
-        kicker: 'Solicitudes',
-        titulo: 'Tienes ' + pendientes + (pendientes === 1 ? ' solicitud' : ' solicitudes') + ' por aprobar',
+        kicker: 'Autorizaciones',
+        titulo: 'Tienes ' + pendientes + (pendientes === 1 ? ' autorización' : ' autorizaciones') + ' por aprobar',
         accion: { texto: 'Revisar', onclick: "vista('autorizaciones_sdi')" }
     };
 
@@ -458,6 +473,14 @@ $(document).on('click', function() {
     $('.header-menu-perfil').removeClass('abierto');
     $('.header-notificaciones-caja').removeClass('abierto');
 });
+
+// Mi perfil: botón "ojo" para mostrar u ocultar una clave.
+const verClavePerfil = (id, boton) => {
+    var $input = $('#' + id);
+    var mostrar = $input.attr('type') === 'password';
+    $input.attr('type', mostrar ? 'text' : 'password');
+    $(boton).toggleClass('activo', mostrar).attr('aria-label', mostrar ? 'Ocultar contraseña' : 'Mostrar contraseña');
+};
 
 // Mi perfil: lista de opciones y vistas internas (solo interfaz).
 const mostrarVistaPerfilApp = (vista) => {
@@ -852,8 +875,9 @@ const cargarAgendaProfesional = (idLugar) => {
             });
             $('#agenda_profesional_lugar').html(opciones).val(actual);
 
-            var registros = Array.isArray(resp.registros) ? resp.registros : [];
-            var html = registros.length ? '' : '<p class="text-center">No hay citas para este día.</p>';
+            // Las horas anuladas/canceladas no se muestran en la agenda.
+            var registros = horasVigentes(resp.registros);
+            var html = registros.length ? '' : '<div class="agenda-profesional-vacio">No hay citas para este día.</div>';
             registros.forEach(function(hora) {
                 var video = hora.es_telemedicina
                     ? (hora.puede_conectarse && hora.video_url
@@ -1665,7 +1689,10 @@ const limpiarFmuAntesDeCargar = () => {
     $tarjetas.find('.card-list').empty();
 
     // Contacto de emergencia.
-    $paginaFmu.find('.ui-content > .row.mb90 .card-button .fecha-small').text('');
+    $('#fmu_contactos_lista').empty();
+    $('#fmu_atenciones_lista').empty();
+    alternarAtencionesFMU(false);
+    alternarOdontogramaFMU(false);
 
     // Odontograma e historial.
     $('#odontograma_fmu_superior, #odontograma_fmu_inferior, #odontograma_fmu_historial').empty();
@@ -1760,6 +1787,11 @@ const solicitarMedicos = () => {
                         imagenMedico = medico.sexo === "M" ? 'src/images/ejemplo_dr.jpg' : 'src/images/ejemplo_dra.jpg';
                     }
 
+                    fotosProfesionalesAgenda[medico.id] = {
+                        src: imagenMedico,
+                        fallback: medico.sexo === 'M' ? 'src/images/ejemplo_dr.jpg' : 'src/images/ejemplo_dra.jpg'
+                    };
+
                     const nombreCompleto = [
                         medico.nombre,
                         medico.apellido_uno,
@@ -1772,6 +1804,13 @@ const solicitarMedicos = () => {
                     ].filter(Boolean).filter(function (valor, indice, lista) {
                         return lista.indexOf(valor) === indice;
                     }).join(' - ') || 'Especialidad no informada';
+                    // En la card solo se muestra la especialidad más específica (ej.: Oftalmología).
+                    const especialidadVisible = [
+                        textoDatoProfesional(medico.sub_tipo_especialidad) || medico.nombre_sub_tipo_especialidad,
+                        textoDatoProfesional(medico.tipo_especialidad) || medico.nombre_tipo_especialidad,
+                        textoDatoProfesional(medico.especialidad) || medico.nombre_especialidad
+                    ].map(function (valor) { return String(valor || '').trim(); }).filter(Boolean)[0]
+                        || 'Especialidad no informada';
                     const lugarAtencion = medico.nombre_lugar_atencion
                         || medico.lugar_atencion
                         || medico.direccion
@@ -1785,11 +1824,11 @@ const solicitarMedicos = () => {
                         <div class="card-button-dos mb20">
                             <div class="row">
                                 <div class="col-xs-3 text-center">
-                                    <a href="javascript:void(0)" onclick="damePerfilMedico(${medico.id})"> <img class="img-circulo" width="70" src="${imagenMedico}" alt="Foto perfil"> </a>
+                                    <a href="javascript:void(0)" onclick="damePerfilMedico(${medico.id})"> <img class="img-circulo" width="70" src="${imagenMedico}" data-fallback="${medico.sexo === 'M' ? 'src/images/ejemplo_dr.jpg' : 'src/images/ejemplo_dra.jpg'}" alt="Foto perfil"> </a>
                                 </div>
-                                <div class="col-xs-9">
+                                <div class="col-xs-9 medico-card-info">
                                     <p class="size16 color-azul mb5">${nombreEscapado}</p>
-                                    <p class="letra-small mb5">${especialidadEscapada}</p>
+                                    <span class="medico-especialidad-badge">${escaparTextoConsentimiento(especialidadVisible)}</span>
                                     <p class="letra-small mb5"><img class="mr10" width="15" src="src/images/ubicacion.svg">${lugarAtencion}</p>
                                     <button type="button" data-role="none" class="btn-agendar-hora" onclick="agendarHora(${medico.id}, '${nombreEscapado}', '${especialidadEscapada}')">Agendar hora</button>
                                 </div>
@@ -1893,7 +1932,7 @@ const damePerfilMedico = (idMedico) => {
                     <div class="card-button-dos mb20">
                         <div class="row">
                             <div class="col-xs-12 text-center mb20">
-                                <img class="img-circulo" width="100" src="${imagenMedico}" alt="Foto perfil">
+                                <img class="img-circulo" width="100" src="${imagenMedico}" data-fallback="${prof.sexo === 'M' ? 'src/images/ejemplo_dr.jpg' : 'src/images/ejemplo_dra.jpg'}" alt="Foto perfil">
                                 <h3 class="color-azul mt10">${prof.nombre} ${prof.apellido_uno} ${prof.apellido_dos || ''}</h3>
                             </div>
                         </div>
@@ -1966,6 +2005,9 @@ const agendarHora = (idMedico, nombreMedico, especialidad) => {
                 setSession('id_medico_seleccionado', idMedico);
                 setSession('nombre_medico_seleccionado', nombreMedico);
                 setSession('especialidad_medico_seleccionado', especialidad);
+                const fotoElegida = fotosProfesionalesAgenda[idMedico] || {};
+                setSession('foto_medico_seleccionado', fotoElegida.src || '');
+                setSession('foto_fallback_medico_seleccionado', fotoElegida.fallback || '');
 
                 // Actualizar el header con la información del médico y botón de retorno
                 const origen = getSession('origen_seleccion_profesional') || 'mis_medicos';
@@ -1976,7 +2018,7 @@ const agendarHora = (idMedico, nombreMedico, especialidad) => {
 
                 $('#lugares_atencion .top-titulos').html(`
                     ${htmlCardProfesionalAgenda(nombreMedico, especialidad)}
-                    <div class="btn-app4 text-center size14 mb20" onclick="vista('${vistaRetorno}');">
+                    <div class="btn-app4 btn-volver-compacto text-center size14 mb20" onclick="vista('${vistaRetorno}');">
                          ${textoRetorno}
                     </div>
                     <p class="size14 text-center mb10">Seleccione el lugar de atención</p>
@@ -1988,12 +2030,12 @@ const agendarHora = (idMedico, nombreMedico, especialidad) => {
                     htmlLugaresAtencion += `
                     <div class="card-button-dos mb20">
                         <div class="row">
-                            <div class="col-xs-12 text-left mb20">
+                            <div class="col-xs-12 text-left">
                                 <div class="media">
                                     <img src="src/images/clinica.png" class="img-circulo text-center mr10" width="80" alt="Centro médico">
-                                    <div class="media-body text-center">
+                                    <div class="media-body text-left lugar-atencion-info">
                                         <p class="size14 color-azul">${lugar.nombre}</p>
-                                        <p class="size13"><img class="mr10" width="20" src="src/images/ubicacion.svg">  ${lugar.direccion} - ${lugar.ciudad}</p>
+                                        <p class="size13"><img class="mr10" width="20" src="src/images/ubicacion.svg">${[lugar.direccion, lugar.ciudad].map(v => String(v == null ? '' : v).trim()).filter(v => v && v !== 'undefined' && v !== 'null').join(' - ') || 'Dirección no informada'}</p>
 
                                         <button type="button" data-role="none" class="btn-agendar-hora" onclick="seleccionarLugarAtencion(${lugar.id},${idMedico},'${lugar.nombre}')">Seleccionar</button>
                                     </div>
@@ -2066,9 +2108,8 @@ const actualizarTarjetasFMU = (fmu) => {
     fmu.ultima_alergia = ultima_alergia || null;
     // Alergias
     if(fmu.ultima_alergia) {
-        const fecha = fechaEsp(fmu.ultima_alergia.created_at);
         $tarjetas.eq(1).find('.card-list').html(
-            `<li>${datoAntecedente(fmu.ultima_alergia, 'nombre', 'Alergia sin detalle')}<br><span class="fecha-small">${fecha}</span></li>`
+            `<li>${datoAntecedente(fmu.ultima_alergia, 'nombre', 'Alergia sin detalle')}</li>`
         );
     } else {
         $tarjetas.eq(1).find('.card-list').html(FMU_SIN_REGISTRO_HTML);
@@ -2125,7 +2166,7 @@ const actualizarTarjetasFMU = (fmu) => {
     if (fmu.ultima_cirugia) {
         const fecha = fechaEsp(fmu.ultima_cirugia.created_at);
         $tarjetas.eq(6).find('.card-list').html(
-            `<li>${datoAntecedente(fmu.ultima_cirugia, 'procedimiento', 'Cirugía sin detalle')} - ${fmu.ultima_cirugia.comentario || ''}<br><span class="fecha-small">${fecha}</span></li><br><span class="letra-small">${datoAntecedente(fmu.ultima_cirugia, 'profesional', '')}</span>`
+            `<li>${datoAntecedente(fmu.ultima_cirugia, 'procedimiento', 'Cirugía sin detalle')} - ${fmu.ultima_cirugia.comentario || ''}<br><span class="fecha-small">${fecha}</span></li>`
         );
     } else {
         $tarjetas.eq(6).find('.card-list').html(FMU_SIN_REGISTRO_HTML);
@@ -2142,18 +2183,136 @@ const actualizarTarjetasFMU = (fmu) => {
         $tarjetas.eq(7).find('.card-list').html(FMU_SIN_REGISTRO_HTML);
     }
 
-    // Contacto de Emergencia
-    const $contacto = $paginaFmu.find('.ui-content > .row.mb90 .card-button');
-    if (fmu.contacto_emergencia) {
-        $contacto.find('.col-xs-4').eq(0).find('.fecha-small').text(fmu.contacto_emergencia.nombre || 'No registrado');
-        $contacto.find('.col-xs-4').eq(1).find('.fecha-small').text(fmu.contacto_emergencia.parentezco || 'No registrado');
-        $contacto.find('.col-xs-4').eq(2).find('.fecha-small').text(fmu.contacto_emergencia.telefono || 'No registrado');
-    } else {
-        $contacto.find('.fecha-small').text('');
-    }
+    // Historial de atenciones
+    renderizarAtencionesFMU(fmu.fichas);
+
+    // Contactos de Emergencia (acepta un objeto o una lista desde el backend)
+    renderizarContactosEmergenciaFMU(fmu.contactos_emergencia || fmu.contacto_emergencia);
 
     renderizarOdontogramaFMU(fmu.odontograma || []);
 }
+
+const escaparHtmlFmu = (valor) => String(valor == null ? '' : valor)
+    .replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;')
+    .replace(/"/g, '&quot;').replace(/'/g, '&#39;');
+
+const capitalizarFmu = (valor) => {
+    const texto = String(valor == null ? '' : valor).trim();
+    return texto ? texto.charAt(0).toUpperCase() + texto.slice(1) : '';
+};
+
+// Historial de atenciones de la FMU: solo las últimas 7, más recientes primero.
+const FMU_ATENCIONES_POR_PAGINA = 7;
+let fmuAtenciones = [];
+let fmuAtencionesVisibles = 0;
+
+const pintarAtencionesFMU = () => {
+    const $lista = $('#fmu_atenciones_lista');
+
+    if (fmuAtenciones.length === 0) {
+        $lista.html('<li class="fmu-atencion-vacia">' + FMU_SIN_REGISTRO + '</li>');
+        return;
+    }
+
+    const html = fmuAtenciones.slice(0, fmuAtencionesVisibles).map(ficha => {
+        // En minúsculas: el CSS lo muestra con text-transform: capitalize.
+        const diagnostico = String(ficha.hipotesis_diagnostico || '').trim().toLowerCase() || FMU_SIN_REGISTRO;
+        return '<li class="fmu-atencion-item">' +
+            '<span class="fmu-atencion-fecha">' + escaparHtmlFmu(fechaEsp(ficha.created_at)) + '</span>' +
+            '<p class="fmu-atencion-diagnostico">' + escaparHtmlFmu(diagnostico) + '</p>' +
+        '</li>';
+    }).join('');
+
+    $lista.html(html);
+};
+
+// Acordeón genérico de la FMU: abre/cierra la card indicada por su id.
+const alternarAcordeonFMU = (idCard, abrir) => {
+    const $card = $('#' + idCard);
+    const $toggle = $card.find('.fmu-acordeon-header').first();
+    const abierto = typeof abrir === 'boolean' ? abrir : $toggle.attr('aria-expanded') !== 'true';
+
+    $toggle.attr('aria-expanded', abierto ? 'true' : 'false');
+    $card.toggleClass('fmu-acordeon-abierto', abierto);
+    $card.find('.fmu-acordeon-cuerpo').first().prop('hidden', !abierto);
+};
+
+const alternarAtencionesFMU = (abrir) => alternarAcordeonFMU('fmu_atenciones', abrir);
+const alternarOdontogramaFMU = (abrir) => alternarAcordeonFMU('odontograma_fmu', abrir);
+
+const renderizarAtencionesFMU = (fichas) => {
+    fmuAtenciones = (Array.isArray(fichas) ? fichas : [])
+        .filter(f => f && !(f.confidencial === true || String(f.confidencial) === '1'))
+        .slice()
+        .sort((a, b) => new Date(b.created_at) - new Date(a.created_at));
+    fmuAtencionesVisibles = Math.min(FMU_ATENCIONES_POR_PAGINA, fmuAtenciones.length);
+    pintarAtencionesFMU();
+};
+
+// Muestra solo el primer nombre y el primer apellido del contacto.
+const nombreCortoContactoFMU = (c) => {
+    const partes = String(c.nombre || '').trim().split(/\s+/).filter(Boolean);
+    const apellidoSeparado = String(c.apellido_uno || c.apellido_paterno || c.apellido || '').trim().split(/\s+/)[0];
+    let resultado;
+
+    if (apellidoSeparado) {
+        resultado = [partes[0], apellidoSeparado];
+    } else if (partes.length <= 2) {
+        resultado = partes;
+    } else if (partes.length === 3) {
+        // Nombre + apellido paterno + apellido materno
+        resultado = [partes[0], partes[1]];
+    } else {
+        // Dos nombres + apellido paterno + apellido materno
+        resultado = [partes[0], partes[partes.length - 2]];
+    }
+
+    return resultado.filter(Boolean).map(capitalizarFmu).join(' ');
+};
+
+// Abre el marcador del teléfono. En Android (Cordova) usa el navegador del sistema.
+const llamarContactoEmergenciaFMU = (telUrl) => {
+    if (!telUrl || telUrl === 'tel:') return false;
+    if (window.cordova && cordova.InAppBrowser) {
+        cordova.InAppBrowser.open(telUrl, '_system');
+    } else {
+        window.location.href = telUrl;
+    }
+    return false;
+};
+
+const renderizarContactosEmergenciaFMU = (datos) => {
+    const $lista = $('#fmu_contactos_lista');
+    let contactos = Array.isArray(datos) ? datos : (datos ? [datos] : []);
+
+    contactos = contactos.filter(c => c && (c.nombre || c.telefono || c.parentezco || c.parentesco));
+
+    if (contactos.length === 0) {
+        $lista.html('<li class="fmu-contacto-vacio">' + FMU_SIN_REGISTRO + '</li>');
+        return;
+    }
+
+    const html = contactos.map(c => {
+        const nombre = nombreCortoContactoFMU(c) || FMU_SIN_REGISTRO;
+        const parentesco = capitalizarFmu(c.parentezco || c.parentesco) || FMU_SIN_REGISTRO;
+        const telefono = String(c.telefono || '').trim();
+        const telefonoHtml = telefono
+            ? '<a class="fmu-contacto-telefono" data-ajax="false" rel="external" href="tel:' + escaparHtmlFmu(telefono.replace(/[^\d+]/g, '')) + '" onclick="return llamarContactoEmergenciaFMU(this.getAttribute(\'href\'));">' +
+                '<svg viewBox="0 0 24 24" width="14" height="14" aria-hidden="true"><path fill="currentColor" d="M6.6 10.8a15.1 15.1 0 0 0 6.6 6.6l2.2-2.2a1 1 0 0 1 1-.25 11.4 11.4 0 0 0 3.6.57 1 1 0 0 1 1 1V20a1 1 0 0 1-1 1A17 17 0 0 1 3 4a1 1 0 0 1 1-1h3.5a1 1 0 0 1 1 1c0 1.25.2 2.45.57 3.57a1 1 0 0 1-.25 1z"/></svg>' +
+                '<span>' + escaparHtmlFmu(telefono) + '</span></a>'
+            : '<span class="fmu-contacto-telefono fmu-contacto-telefono-vacio">' + FMU_SIN_REGISTRO + '</span>';
+
+        return '<li class="fmu-contacto-item">' +
+            '<div class="fmu-contacto-info">' +
+                '<p class="fmu-contacto-nombre">' + escaparHtmlFmu(nombre) + '</p>' +
+                '<span class="fmu-contacto-parentesco">' + escaparHtmlFmu(parentesco) + '</span>' +
+            '</div>' +
+            telefonoHtml +
+        '</li>';
+    }).join('');
+
+    $lista.html(html);
+};
 
 let odontogramaFmuActual = {};
 
@@ -2235,6 +2394,8 @@ const mostrarSinDatos = () => {
     // Las tarjetas sin datos se siguen mostrando, con "Sin Registro".
     $paginaFmu.find('.cards-grid .card-button .card-list').html(FMU_SIN_REGISTRO_HTML);
     renderizarOdontogramaFMU([]);
+    renderizarContactosEmergenciaFMU(null);
+    renderizarAtencionesFMU(null);
 }
 
 var citasPacienteRegistros = [];
@@ -2281,8 +2442,13 @@ const cambiarFiltroCitas = (filtro) => {
         .addClass('active')
         .attr('aria-selected', 'true');
 
+    cerrarFiltroCitas();
     renderizarCitasPaciente();
 };
+
+// Botón de filtro + hoja inferior con los estados (vista Mis citas agendadas).
+const abrirFiltroCitas = () => { $('#citas_filtro_sheet').addClass('sheet-abierta'); };
+const cerrarFiltroCitas = () => { $('#citas_filtro_sheet').removeClass('sheet-abierta'); };
 
 const renderizarCitasPaciente = () => {
     var registros = citasPacienteRegistros.filter(function(hora) {
@@ -2293,7 +2459,7 @@ const renderizarCitasPaciente = () => {
         todas: 'Todas las citas',
         reservadas: 'Horas que necesitan tu confirmación',
         confirmadas: 'Horas confirmadas',
-        otras: 'Horas rechazadas, anuladas u otros estados'
+        otras: 'Horas en otros estados'
     };
 
     $('#citas-filtro-resumen').text(
@@ -2330,9 +2496,17 @@ const renderizarCitasPaciente = () => {
             ? 'Reservada'
             : (estado === 2 ? 'Confirmada' : (hora.estado || 'Rechazada'));
 
+        // Colores de la agenda web: 1 = reservada, 2 = confirmada, 5 = realizando atención.
         const estadoClase = estado === 1
             ? 'reservada'
-            : (estado === 2 ? 'confirmada' : 'otra');
+            : (estado === 2 ? 'confirmada' : (estado === 5 ? 'realizando' : 'otra'));
+
+        // Reservada, confirmada y realizando usan el color que envía el backend
+        // (tabla parametros, el mismo de la agenda web). Si no llega, queda el del CSS.
+        const colorEstado = [1, 2, 5].includes(estado) && /^#[0-9a-f]{3,8}$/i.test(String(hora.estado_color || ''))
+            ? hora.estado_color
+            : '';
+        const estiloEstado = colorEstado ? ` style="background:${colorEstado}"` : '';
 
         const botonesHtml = estado === 1 ? `
             <div class="cita-acciones">
@@ -2356,16 +2530,12 @@ const renderizarCitasPaciente = () => {
             </div>
         ` : '';
 
-        const botonVideoHtml = hora.es_telemedicina ? (
-            hora.puede_conectarse && hora.video_url ? `
+        const botonVideoHtml = hora.es_telemedicina && hora.puede_conectarse && hora.video_url ? `
                 <button type="button" data-role="none" class="cita-btn videollamada"
                         onclick="abrirVideollamadaApp('${hora.video_url}')">
                     Iniciar videollamada
                 </button>
-            ` : `
-                <div class="cita-telemedicina-estado">Telemedicina: ${hora.estado || estadoHora}</div>
-            `
-        ) : '';
+            ` : '';
 
         let imagenMedico = '';
         if (hora.foto_perfil && hora.foto_perfil !== '') {
@@ -2379,13 +2549,13 @@ const renderizarCitasPaciente = () => {
         htmlHoras += `
             <article class="cita-paciente-card">
                 <div class="cita-paciente-header">
-                    <img class="cita-paciente-avatar" src="${imagenMedico}" alt="Foto perfil">
+                    <img class="cita-paciente-avatar" src="${imagenMedico}" data-fallback="${hora.sexo === 'M' ? 'src/images/ejemplo_dr.jpg' : 'src/images/ejemplo_dra.jpg'}" alt="Foto perfil">
                     <div>
                         <h3>${escaparTextoConsentimiento(medico)}</h3>
                         <p>${escaparTextoConsentimiento(especialidad)}${tipo_especialidad ? ' · ' + escaparTextoConsentimiento(tipo_especialidad) : ''}</p>
                         ${sub_tipo_especialidad ? `<small>${escaparTextoConsentimiento(sub_tipo_especialidad)}</small>` : ''}
                     </div>
-                    <span class="cita-estado ${estadoClase}">${escaparTextoConsentimiento(estadoHora)}</span>
+                    <span class="cita-estado ${estadoClase}"${estiloEstado}>${escaparTextoConsentimiento(estadoHora)}</span>
                 </div>
 
                 <div class="cita-paciente-datos">
@@ -2417,8 +2587,9 @@ const solicitarMisHorasMedicas = (forzar) => {
         function (resp) {
             LOG('mis horas estado:' + resp.estado);
 
-            citasPacienteRegistros = resp.estado == 1 && Array.isArray(resp.horas)
-                ? resp.horas
+            // Las horas anuladas/canceladas no se muestran ni cuentan en los totales.
+            citasPacienteRegistros = resp.estado == 1
+                ? horasVigentes(resp.horas)
                 : [];
 
             actualizarContadoresCitas();
@@ -2846,13 +3017,25 @@ const volverDesdeFechasAgenda = () => {
 
 const escaparTextoAgenda = (valor) => $('<div>').text(valor == null ? '' : String(valor)).html();
 
+// De "MÉDICOS - ESPECIALIDADES MÉDICAS - Oftalmología" deja solo "Oftalmología".
+const especialidadCortaAgenda = (especialidad) => {
+    const partes = String(especialidad || '').split(' - ').map(p => p.trim()).filter(Boolean);
+    return partes.length ? partes[partes.length - 1] : 'Especialidad no informada';
+};
+
+// Fotos de los profesionales listados, para mostrarlas al agendar.
+const fotosProfesionalesAgenda = {};
+
 // Card del profesional usada en todos los pasos de Agendar hora (lugar y badges son opcionales).
 const htmlCardProfesionalAgenda = (nombre, especialidad, lugar, badges) => {
     const listaBadges = (badges || []).filter(Boolean);
+    const fallbackFoto = getSession('foto_fallback_medico_seleccionado') || 'src/images/ejemplo_dr.jpg';
+    const foto = getSession('foto_medico_seleccionado') || fallbackFoto;
     return `
         <div class="agenda-profesional-card">
+            <img class="agenda-profesional-foto" src="${escaparTextoAgenda(foto)}" data-fallback="${escaparTextoAgenda(fallbackFoto)}" alt="Foto del profesional">
             <strong class="agenda-profesional-nombre">${escaparTextoAgenda(nombre)}</strong>
-            <span class="agenda-profesional-especialidad">${escaparTextoAgenda(especialidad)}</span>
+            <span class="medico-especialidad-badge">${escaparTextoAgenda(especialidadCortaAgenda(especialidad))}</span>
             ${lugar ? `<span class="agenda-profesional-lugar"><img width="12" src="src/images/ubicacion.svg" alt="">${escaparTextoAgenda(lugar)}</span>` : ''}
             ${listaBadges.length ? `<div class="agenda-profesional-badges">${listaBadges.map(b => `<span class="agenda-modalidad-seleccionada">${escaparTextoAgenda(b)}</span>`).join('')}</div>` : ''}
         </div>`;
@@ -3468,7 +3651,7 @@ const confirmarHoraMedicaAgendada = async (idHora) => {
             icon: 'question',
             confirmButtonText: 'Sí, continuar',
             cancelButtonText: 'Ahora no',
-            confirmButtonColor: '#18a36f'
+            confirmButtonColor: '#31bebe'
         }
     );
 
@@ -3665,6 +3848,10 @@ const buscarProfesionales = () => {
                             var fotoPerfil = 'src/images/ejemplo_dr.jpg';
                         }
                     }
+                    fotosProfesionalesAgenda[prof.id] = {
+                        src: fotoPerfil,
+                        fallback: prof.sexo === 'F' ? 'src/images/ejemplo_dra.jpg' : 'src/images/ejemplo_dr.jpg'
+                    };
                     const nombreCompleto = [
                         prof.nombre,
                         prof.apellido_uno,
@@ -3694,7 +3881,7 @@ const buscarProfesionales = () => {
                     <div class="card-button-dos mb20">
                         <div class="row">
                             <div class="col-xs-3 text-center">
-                                <a href="javascript:void(0)" onclick="damePerfilMedico(${prof.id})"> <img class="img-circulo" width="70" src="${fotoPerfil}" alt="Foto perfil"> </a>
+                                <a href="javascript:void(0)" onclick="damePerfilMedico(${prof.id})"> <img class="img-circulo" width="70" src="${fotoPerfil}" data-fallback="${prof.sexo === 'F' ? 'src/images/ejemplo_dra.jpg' : 'src/images/ejemplo_dr.jpg'}" alt="Foto perfil"> </a>
                             </div>
                             <div class="col-xs-9">
                                 <p class="size16 color-azul mb5">${nombreCard}</p>
@@ -3919,8 +4106,15 @@ const filtrarAutorizaciones = (filtro) => {
         .filter('[data-filtro="' + filtro + '"]')
         .addClass('active');
 
+    $('#autorizaciones_btn_filtro').toggleClass('con-filtro', filtro !== 'todas');
+    cerrarFiltroAutorizaciones();
+
     renderizarAutorizaciones();
 };
+
+// Botón de filtro + hoja inferior con los estados (vista Mis autorizaciones).
+const abrirFiltroAutorizaciones = () => { $('#autorizaciones_filtro_sheet').addClass('sheet-abierta'); };
+const cerrarFiltroAutorizaciones = () => { $('#autorizaciones_filtro_sheet').removeClass('sheet-abierta'); };
 
 var listLogDeviceEnCurso = false;
 var listLogDeviceUltimaCarga = 0;
