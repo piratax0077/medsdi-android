@@ -309,8 +309,13 @@ const resolverDesafioConBiometria = () => {
         },
         function (error) {
             if (error && Number(error.code) === -113) {
-                localStorage.removeItem('biometria_login_habilitada');
-                localStorage.removeItem('biometria_login_usuario');
+                if (typeof limpiarLoginBiometricoApp === 'function') {
+                    limpiarLoginBiometricoApp();
+                } else {
+                    localStorage.removeItem('biometria_login_habilitada');
+                    localStorage.removeItem('biometria_login_usuario');
+                    localStorage.removeItem('biometria_login_uuid');
+                }
                 $('#desafio-confirmar-huella').hide();
             }
             $('#desafio-confirmacion-error').text(

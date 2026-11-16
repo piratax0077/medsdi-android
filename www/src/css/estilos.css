@@ -3317,6 +3317,11 @@ placeholder{
       line-height: 16px;
       font-weight: 700;
       pointer-events: none;
+      transition: color .18s ease;
+  }
+
+  #login .login-campo:focus-within > label.floating-label {
+      color: #168fa9;
   }
 
   #login .login-input-contenedor { position: relative; }

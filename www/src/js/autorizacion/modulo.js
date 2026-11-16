@@ -28,7 +28,23 @@ const biometriaHabilitadaApp = () => {
 };
 
 const loginBiometricoHabilitadoApp = () => {
-    return localStorage.getItem('biometria_login_habilitada') === '1';
+    var habilitado = localStorage.getItem('biometria_login_habilitada') === '1';
+    var usuarioAsociado = $.trim(localStorage.getItem('biometria_login_usuario') || '');
+    var dispositivoAsociado = $.trim(localStorage.getItem('biometria_login_uuid') || '');
+    var dispositivoActual = typeof obtenerUuidDispositivo === 'function'
+        ? $.trim(obtenerUuidDispositivo() || '')
+        : $.trim(localStorage.getItem('uuid') || '');
+
+    // El botón solo representa una credencial realmente asociada: debe
+    // existir usuario y la asociación debe pertenecer a este dispositivo.
+    return habilitado && usuarioAsociado !== '' && dispositivoAsociado !== '' &&
+        dispositivoActual !== '' && dispositivoAsociado === dispositivoActual;
+};
+
+const limpiarLoginBiometricoApp = () => {
+    localStorage.removeItem('biometria_login_habilitada');
+    localStorage.removeItem('biometria_login_usuario');
+    localStorage.removeItem('biometria_login_uuid');
 };
 
 const codificarBovedaBiometricaApp = (datos) => {
@@ -209,6 +225,12 @@ const activarLoginBiometricoApp = () => {
             function() {
                 localStorage.setItem('biometria_login_habilitada', '1');
                 localStorage.setItem('biometria_login_usuario', email);
+                localStorage.setItem(
+                    'biometria_login_uuid',
+                    typeof obtenerUuidDispositivo === 'function'
+                        ? obtenerUuidDispositivo()
+                        : (localStorage.getItem('uuid') || '')
+                );
                 actualizarEstadoLoginBiometricoApp();
                 msg('Ingreso con huella', 'El inicio de sesión con huella quedó activado.', 'success');
             },
@@ -222,8 +244,7 @@ const activarLoginBiometricoApp = () => {
 };
 
 const desactivarLoginBiometricoApp = () => {
-    localStorage.removeItem('biometria_login_habilitada');
-    localStorage.removeItem('biometria_login_usuario');
+    limpiarLoginBiometricoApp();
     actualizarEstadoLoginBiometricoApp();
     msg('Ingreso con huella', 'El inicio de sesión con huella fue desactivado.', 'success');
 };
@@ -261,6 +282,12 @@ const ingresarConBiometriaApp = () => {
                 }
                 localStorage.setItem('biometria_login_habilitada', '1');
                 localStorage.setItem('biometria_login_usuario', boveda.user);
+                localStorage.setItem(
+                    'biometria_login_uuid',
+                    typeof obtenerUuidDispositivo === 'function'
+                        ? obtenerUuidDispositivo()
+                        : (localStorage.getItem('uuid') || '')
+                );
                 if (boveda.pin) {
                     sessionStorage.setItem('biometria_pin_recuperada', '1');
                 }
@@ -273,8 +300,7 @@ const ingresarConBiometriaApp = () => {
         },
         function(error) {
             if (error && Number(error.code) === -113) {
-                localStorage.removeItem('biometria_login_habilitada');
-                localStorage.removeItem('biometria_login_usuario');
+                limpiarLoginBiometricoApp();
                 actualizarBotonLoginBiometricoApp();
             }
             msg('Ingreso con huella', (error && error.message) || 'No fue posible validar la huella.', 'error');
