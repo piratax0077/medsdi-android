@@ -724,9 +724,12 @@
                 <div class="login-input-contenedor">
                     <svg viewBox="0 0 24 24" aria-hidden="true"><rect x="5" y="10" width="14" height="11" rx="2"/><path d="M8 10V7a4 4 0 0 1 8 0v3"/></svg>
                     <input type="password" class="input-app" placeholder="Ingresa tu contraseña" id="pass" value="" autocomplete="current-password">
+                    <button type="button" data-role="none" class="login-ojo" onclick="verClavePerfil('pass', this)" aria-label="Mostrar contraseña"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M2.5 12S6 5.5 12 5.5 21.5 12 21.5 12 18 18.5 12 18.5 2.5 12 2.5 12z"/><circle cx="12" cy="12" r="3"/><path class="ojo-tachado" d="M4 4l16 16"/></svg></button>
                 </div>
             </div>
-            <a class="login-recuperar" onclick="mostrarRecuperarContrasena()" role="button" tabindex="0">¿Olvidaste tu contraseña?</a>
+            <div class="login-opciones">
+                <a class="login-recuperar" onclick="mostrarRecuperarContrasena()" role="button" tabindex="0">¿Olvidaste tu contraseña?</a>
+            </div>
             <button type="button" class="login-boton-principal" onclick="ingresarLogin()">
                 <span>Ingresar</span>
                 <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M5 12h14M14 7l5 5-5 5"/></svg>
@@ -2327,6 +2330,11 @@
                 <span class="perfil-app-fila-texto">Inicio de sesión con huella</span>
                 <svg class="perfil-app-fila-flecha" viewBox="0 0 24 24" aria-hidden="true"><path d="M9 5l7 7-7 7"/></svg>
             </button>
+            <button type="button" data-role="none" class="perfil-app-fila" onclick="actualizarEstadoRecordarLogin(); mostrarVistaPerfilApp('recordar-login')">
+                <span class="perfil-app-fila-icono"><svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="8" cy="15" r="4"/><path d="M11 12l8-8M16 7l2 2M14 9l2 2"/></svg></span>
+                <span class="perfil-app-fila-texto">Contraseña recordada</span>
+                <svg class="perfil-app-fila-flecha" viewBox="0 0 24 24" aria-hidden="true"><path d="M9 5l7 7-7 7"/></svg>
+            </button>
         </nav>
         <div class="perfil-app-foto" data-panel-zona="datos">
             <div class="perfil-hero">
@@ -2442,6 +2450,12 @@
             <div id="perfil_app_biometria_login_activar" class="btn-app7 mt10" onclick="activarLoginBiometricoApp()">Activar ingreso con huella</div>
             <div id="perfil_app_biometria_login_desactivar" class="btn-app4 mt10" onclick="desactivarLoginBiometricoApp()" style="display:none">Desactivar ingreso con huella</div>
         </section>
+        <section class="perfil-app-seccion perfil-app-seguridad-card" data-panel="recordar-login">
+            <h3>Contraseña recordada</h3>
+            <p id="perfil_app_recordar_estado" class="perfil-app-ayuda">No hay una contraseña guardada en este dispositivo.</p>
+            <p class="perfil-app-ayuda">Al iniciar sesión se te pregunta si quieres guardar el acceso. Si lo olvidas aquí, tendrás que escribir tu contraseña de nuevo la próxima vez.</p>
+            <div id="perfil_app_recordar_desactivar" class="btn-app4 mt10" onclick="olvidarLoginRecordado()" style="display:none">Dejar de recordar contraseña</div>
+            <div id="perfil_app_recordar_preguntar" class="btn-app7 mt10" onclick="volverAPreguntarGuardarAcceso()" style="display:none">Volver a preguntar al iniciar sesión</div>        </section>
     </div>
     <div data-role="footer" class="footer menu-inferior">
         <div class="row bg-azul"><div class="col-xs-12 pt10 pb10 text-center">
