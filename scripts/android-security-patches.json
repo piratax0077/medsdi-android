@@ -1,0 +1,84 @@
+[
+  {
+    "path": "de/niklasmerz/cordova/biometric/BiometricActivity.java",
+    "before": "eff0fe35b61850e61e546ad45b7de4299e38e3df0b9c511138199dc1658b8cc1",
+    "after": "34cd45beb802ff8b471d535437877fb17d824b03f7754e65c17a9532606d4cce",
+    "changes": [
+      [
+        "    public void onActivityResult(int requestCode, int resultCode, Intent data) {",
+        "    public void onActivityResult(int requestCode, int resultCode, Intent data) {\n        super.onActivityResult(requestCode, resultCode, data);"
+      ]
+    ]
+  },
+  {
+    "path": "org/apache/cordova/dialogs/Notification.java",
+    "before": "a851335b31b12559b01d643ce53515ffe42e85d967f1d01bfa0aab75845e4b34",
+    "after": "da9170fec9001d76a17b02ce0792efae6b0349e0035dce6a3ed2364ab3f69276",
+    "changes": [
+      [
+        "    \tif (this.cordova.getActivity().isFinishing()) return true;",
+        "        if (this.cordova.getActivity().isFinishing()) {\n            return true;\n        }"
+      ]
+    ]
+  },
+  {
+    "path": "org/apache/cordova/firebasex/FirebasexMessagingService.java",
+    "before": "139e7ad6f9e8e717acb445b308856c8e65677d7bc5c1ca4af831a114820ff6a0",
+    "after": "c73dcd3e08da7aaf27d5751ced1c465cc60b0179b270a1a31ccd007c3308913e",
+    "changes": [
+      [
+        "            if(getApplicationInfo().targetSdkVersion >= Build.VERSION_CODES.S && Build.VERSION.SDK_INT >= Build.VERSION_CODES.S) {\n                intent = new Intent(this, OnNotificationReceiverActivity.class);\n                intent.putExtras(bundle);\n                pendingIntent = PendingIntent.getActivity(this, id.hashCode(), intent, flag);\n            }else{\n                intent = new Intent(this, OnNotificationOpenReceiver.class);\n                intent.putExtras(bundle);\n                pendingIntent = PendingIntent.getBroadcast(this, id.hashCode(), intent, flag);\n            }",
+        "            // API 24+ del proyecto: abrir siempre una Activity directamente.\n            intent = new Intent(this, OnNotificationReceiverActivity.class);\n            intent.putExtras(bundle);\n            pendingIntent = PendingIntent.getActivity(this, id.hashCode(), intent, flag);"
+      ],
+      [
+        "            Log.d(TAG, \"Refreshed token: \" + refreshedToken);",
+        "        // Contenido y token FCM excluidos de los registros."
+      ],
+      [
+        "            Log.d(TAG, \"Title: \" + title);",
+        "        // Contenido y token FCM excluidos de los registros."
+      ],
+      [
+        "            Log.d(TAG, \"Body: \" + body);",
+        "        // Contenido y token FCM excluidos de los registros."
+      ],
+      [
+        "        Log.d(TAG, \"sendMessage(): messageType=\"+messageType+\"; showNotification=\"+showNotification+\"; id=\"+id+\"; title=\"+title+\"; body=\"+body+\"; sound=\"+sound+\"; vibrate=\"+vibrate+\"; light=\"+light+\"; color=\"+color+\"; icon=\"+icon+\"; channel=\"+channelId+\"; data=\"+data.toString());",
+        "        // Contenido y token FCM excluidos de los registros."
+      ]
+    ]
+  },
+  {
+    "path": "org/apache/cordova/firebasex/OnNotificationReceiverActivity.java",
+    "before": "46a2994171c960e3ad60acd36bfec4e03cdd927eef2e9ebcc67385ee34656c33",
+    "after": "0cff96839e1dffe4bf62c8c08cb361132d78b2162aa35ee88426f1ca88676355",
+    "changes": [
+      [
+        "            Log.d(TAG, \"OnNotificationReceiverActivity.handleNotification(): \"+data.toString());",
+        "            // Datos de notificaciones excluidos de los registros."
+      ]
+    ]
+  },
+  {
+    "path": "org/apache/cordova/firebasex/OnNotificationOpenReceiver.java",
+    "before": "69f345c59d81781c6555ba228659f6db5e436277d09b9cbc110c7682e41cf594",
+    "after": "dffac2066dc111c38ec4f317ed91b8387a68e99c3421afdf3d15fdd9ca0799e1",
+    "changes": [
+      [
+        "            Log.d(TAG, \"OnNotificationOpenReceiver.onReceive(): \"+data.toString());",
+        "            // Datos de notificaciones excluidos de los registros."
+      ]
+    ]
+  },
+  {
+    "path": "org/apache/cordova/firebasex/FirebasexMessagingPlugin.java",
+    "before": "23d13a4c79d2bfa8767613b1a169ed4b230de21fda09ee04351c7393a7abfee9",
+    "after": "8279f497c117ea0c5537393eae2db758238c6189b94c85eea3d70d8f0db4efc2",
+    "changes": [
+      [
+        "                Log.d(TAG, \"Notification message on new intent: \" + data.toString());",
+        "            // Datos de notificaciones excluidos de los registros."
+      ]
+    ]
+  }
+]

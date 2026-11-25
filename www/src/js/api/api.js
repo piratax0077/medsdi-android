@@ -1,5 +1,39 @@
 "use strict";
 
+// Los tokens de sesión viven únicamente en memoria del proceso del WebView.
+// Actualizar o cerrar la app exige volver a iniciar sesión.
+const medsdiSession = (() => {
+    let token = '';
+    localStorage.removeItem('authToken');
+    return {
+        get: () => token,
+        set: value => { token = String(value || ''); },
+        clear: () => { token = ''; }
+    };
+})();
+const medsdiGetAuthToken = () => medsdiSession.get();
+const medsdiSetAuthToken = value => {
+    if(medsdiSession.get() && medsdiSession.get()!==String(value || '')){
+        if(typeof medsdiCloseVideoCall==='function')medsdiCloseVideoCall();
+        if(typeof medsdiCloseMessageAttachment==='function')medsdiCloseMessageAttachment();
+    }
+    medsdiSession.set(value);
+};
+const medsdiClearAuthToken = () => {
+    medsdiSession.clear();
+    if (typeof medsdiCloseVideoCall === 'function') medsdiCloseVideoCall();
+    if (typeof medsdiCloseMessageAttachment === 'function') medsdiCloseMessageAttachment();
+    if (typeof mensajesAppCache !== 'undefined') mensajesAppCache = [];
+    if (typeof mensajesAppUltimaCarga !== 'undefined') mensajesAppUltimaCarga = 0;
+    localStorage.removeItem('authToken');
+    if (typeof MEDSDI_REQUEST_STATE !== 'undefined') {
+        MEDSDI_REQUEST_STATE.cache = {};
+        MEDSDI_REQUEST_STATE.inflight = {};
+    }
+};
+
+
+
 // Backend centralizado. Durante las pruebas se puede alternar desde la consola:
 // medsdiSetBackend('cloud');
 // medsdiSetBackend('legacy');
@@ -32,7 +66,7 @@ function medsdiSetBackend(backend) {
     }
 
     localStorage.setItem('medsdiBackend', backend);
-    localStorage.removeItem('authToken');
+    medsdiClearAuthToken();
     location.reload();
 }
 
@@ -121,7 +155,7 @@ var Api = /** @class */ (function () {
 
         var headers = {'Accept': 'application/json'};
         var needsAuth = this.needsAuth();
-        var token = localStorage.getItem('authToken');
+        var token = medsdiGetAuthToken();
 
         if (token && needsAuth) {
             headers['X-Auth-Token'] = token;
@@ -162,7 +196,6 @@ var Api = /** @class */ (function () {
         if (methodSend === 'GET' && MEDSDI_REQUEST_STATE.cache[requestKey]) {
             var cached = MEDSDI_REQUEST_STATE.cache[requestKey];
             if ((now - cached.createdAt) < cached.ttl) {
-                console.log('[MED-SDI] GET desde caché:', url);
                 setTimeout(function () { callback(cached.response); }, 0);
                 return null;
             }
@@ -173,7 +206,6 @@ var Api = /** @class */ (function () {
         if (methodSend === 'GET' && MEDSDI_REQUEST_STATE.inflight[requestKey]) {
             MEDSDI_REQUEST_STATE.inflight[requestKey].success.push(callback);
             MEDSDI_REQUEST_STATE.inflight[requestKey].error.push(errorcallback);
-            console.log('[MED-SDI] GET duplicado reutilizado:', url);
             return MEDSDI_REQUEST_STATE.inflight[requestKey].xhr;
         }
 
@@ -197,7 +229,7 @@ var Api = /** @class */ (function () {
             contentType: contentType,
             processData: processData,
             success: function (response) {
-                console.log('[MED-SDI] ' + methodSend + ' ' + url + ' OK en ' + (Date.now() - startedAt) + 'ms');
+                if (needsAuth && token !== medsdiGetAuthToken()) return;
 
                 if (methodSend === 'GET') {
                     MEDSDI_REQUEST_STATE.cache[requestKey] = {
@@ -219,6 +251,7 @@ var Api = /** @class */ (function () {
                 }
             },
             error: function (xhr, status, error) {
+                if (needsAuth && token !== medsdiGetAuthToken()) return;
                 console.error('[MED-SDI] ' + methodSend + ' ' + url + ' ERROR', xhr.status, status, error);
 
                 if (xhr.status === 429) {
@@ -226,7 +259,7 @@ var Api = /** @class */ (function () {
                 }
 
                 if (xhr.status === 401) {
-                    localStorage.removeItem('authToken');
+                    medsdiClearAuthToken();
                     if (typeof vista === 'function') vista('login', 'fade');
                 }
 
@@ -274,8 +307,8 @@ var Api = /** @class */ (function () {
             'paciente/ficha-atencion-app',           // *** POR SI ACASO ***
             'profesionales/buscar_profesionales',
             'paciente/agendar_hora_medica',
-            'paciente/anular_hora_medica',
-            'paciente/confirmar_hora_medica'
+            'paciente/confirmar_hora_medica',
+            'paciente/anular_hora_medica'
             ,'mensajes/'
             ,'mensajes'
             ,'mensajes/leer'
@@ -292,7 +325,6 @@ var Api = /** @class */ (function () {
 
     // Resto del código igual...
     Api.prototype.help = function () {
-        console.log("\n        -- Inicializar Datos --\n        Ej: var datos = {nombre:'prueba'};\n        -- Incializamos la Api -- Paramentros(modulo:string,metodo:string)\n        Ej: var api = new Api(\"adicionales\",\"obtenerCoberturas\");\n        -- Ejecutamos un REQUEST -- Parametros(datos:Object,funcion callback,metodo de envio \"GET\" o \"POST\")\n        Ej: api.request(datos,function(resp:any){console.log(resp)},\"GET\")\n      ");
     };
 
     Object.defineProperty(Api.prototype, "url", {

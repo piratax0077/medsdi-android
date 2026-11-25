@@ -1,5 +1,5 @@
 const mobileTwoFactorRequest = (path, method, data, success, errorCallback) => {
-    const token = localStorage.getItem('authToken');
+    const token = medsdiGetAuthToken();
     if (!token) {
         msg('Seguridad', 'Debes iniciar sesión para revisar los accesos.', 'warning');
         return;
@@ -11,16 +11,10 @@ const mobileTwoFactorRequest = (path, method, data, success, errorCallback) => {
         data || {},
         success,
         function (xhr, status, error) {
-            console.error('[MED-SDI] MOBILE 2FA ERROR', {
-                status: xhr ? xhr.status : null,
-                responseText: xhr ? xhr.responseText : null,
-                responseJSON: xhr ? xhr.responseJSON : null,
-                ajaxStatus: status,
-                error: error
-            });
+            console.error('[MED-SDI] No fue posible resolver la solicitud.', xhr ? xhr.status : null);
 
             if (xhr && xhr.status === 401) {
-                localStorage.removeItem('authToken');
+                medsdiClearAuthToken();
                 localStorage.setItem('desafioAccesoPendiente', '1');
                 vista('login', 'fade');
                 msg('Seguridad', 'Tu sesión móvil terminó. Inicia sesión nuevamente.', 'warning');
@@ -57,7 +51,7 @@ const mobileTwoFactorRequest = (path, method, data, success, errorCallback) => {
 };
 
 const abrirDesafiosAcceso = () => {
-    if (!localStorage.getItem('authToken')) {
+    if (!medsdiGetAuthToken()) {
         localStorage.setItem('desafioAccesoPendiente', '1');
         vista('login', 'fade');
         msg('Seguridad', 'Inicia sesión para revisar los accesos.', 'warning');
@@ -272,14 +266,6 @@ const resolverDesafioConClave = () => {
         return;
     }
 
-    const claveSincronizada = String(localStorage.getItem('password') || '');
-    if (/^\d{4}$/.test(claveSincronizada) && credential !== claveSincronizada) {
-        $('#desafio-confirmacion-error').text(
-            'La clave ingresada no coincide con la clave SDI vigente de este dispositivo.'
-        );
-        $('#desafio_clave_web').val('').focus();
-        return;
-    }
     resolverDesafioAcceso(actual.id, actual.decision, 'device_pin', credential);
 };
 

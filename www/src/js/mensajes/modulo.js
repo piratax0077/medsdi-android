@@ -137,18 +137,10 @@ const cerrarDetalleMensajeApp = () => {
 };
 
 const abrirAdjuntoMensajeApp = (mensajeId, indice) => {
-    var mensaje = mensajesAppCache.find(function(item) {
-        return Number(item.id) === Number(mensajeId);
-    });
-    var url = mensaje && mensaje.archivos && mensaje.archivos[indice]
-        ? mensaje.archivos[indice].url
-        : '';
-    if (!url) return;
-    if (typeof cordova !== 'undefined' && cordova.InAppBrowser) {
-        cordova.InAppBrowser.open(url, '_system');
-        return;
-    }
-    window.open(url, '_blank');
+    var mensaje = mensajesAppCache.find(item => Number(item.id) === Number(mensajeId));
+    var adjunto = mensaje && mensaje.archivos && mensaje.archivos[indice];
+    if (!adjunto) return;
+    return medsdiShowMessageAttachment(mensajeId, indice, adjunto);
 };
 
 $(document).on('pageshow', '#mensajes-app', function() {
@@ -158,7 +150,7 @@ $(document).on('pageshow', '#mensajes-app', function() {
 // Contador de no leídos en la carta junto a la campana (inicio paciente y profesional).
 var contadorMensajesConsultando = false;
 const actualizarContadorMensajes = () => {
-    if (contadorMensajesConsultando || mensajesAppCargando || !localStorage.getItem('authToken')) return;
+    if (contadorMensajesConsultando || mensajesAppCargando || !medsdiGetAuthToken()) return;
     contadorMensajesConsultando = true;
     var rol = localStorage.getItem('rolActivo') === 'Profesional' ? 'Profesional' : 'Paciente';
     var api = new Api('mensajes', '');

@@ -4,7 +4,7 @@ var notificacionesPushInicializacionMs = 5 * 60 * 1000;
 var registroTokenPushEnCurso = false;
 
 const registrarTokenPush = (token) => {
-    const authToken = localStorage.getItem('authToken');
+    const authToken = medsdiGetAuthToken();
     if (!authToken || !token || registroTokenPushEnCurso) return;
 
     var usuario = String(_SESSION('id_usuario') || '');
@@ -66,7 +66,7 @@ const manejarNotificacionPush = (mensaje) => {
             return;
         }
 
-        if (!localStorage.getItem('authToken')) {
+        if (!medsdiGetAuthToken()) {
             localStorage.setItem(esMensajeDirecto ? 'mensajePendiente' : (esAutorizacion ? 'autorizacionPendiente' : 'desafioAccesoPendiente'), '1');
             $('#user, #pass').val('');
             vista('login', 'fade');

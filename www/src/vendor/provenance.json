@@ -1,0 +1,16 @@
+{
+  "package": "sweetalert2",
+  "version": "11.26.25",
+  "files": [
+    {
+      "name": "sweetalert2.all.min.js",
+      "sha256": "4e86f0e22e4771b5b8aac24c613c661806a678b1afa284d03cf6ad03d3e21a0a",
+      "source": "https://cdn.jsdelivr.net/npm/sweetalert2@11.26.25/dist/sweetalert2.all.min.js"
+    },
+    {
+      "name": "sweetalert2.min.css",
+      "sha256": "a1173e56fd474be04ddbefa81bd75cc465627ef2f5db261792e7d25fb7871743",
+      "source": "https://cdn.jsdelivr.net/npm/sweetalert2@11.26.25/dist/sweetalert2.min.css"
+    }
+  ]
+}

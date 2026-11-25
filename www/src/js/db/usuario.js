@@ -161,6 +161,17 @@ const sesionUsuario = (usuario) => {
 }
 
 const cerrarSesion = () => {
+    const sessionToken = medsdiGetAuthToken();
+    if (sessionToken) {
+        // La limpieza local no depende de la disponibilidad de la red.
+        fetch(MEDSDI_API_URL + '/mobile-authorization/logout', {
+            method: 'POST', headers: {Accept: 'application/json', Authorization: 'Bearer ' + sessionToken}
+        }).catch(function() {});
+    }
+    medsdiClearAuthToken();
+    if (typeof borrarLoginRecordado === 'function') borrarLoginRecordado();
+    $('#pass_device, #password_desbloqueo, #password_, #desafio_clave_web').val('');
+
     // La identidad física del teléfono no pertenece a la sesión del usuario.
     // Se conserva para poder asociar el mismo equipo a otra cuenta.
     const datosDispositivo = {
@@ -171,7 +182,7 @@ const cerrarSesion = () => {
     const configuracionBiometrica = {};
     for (var indice = 0; indice < localStorage.length; indice++) {
         var claveBiometrica = localStorage.key(indice);
-        if (claveBiometrica && (claveBiometrica.indexOf('biometria_') === 0 || claveBiometrica.indexOf('recordar_login_') === 0)) {
+        if (claveBiometrica && (claveBiometrica.indexOf('biometria_') === 0)) {
             configuracionBiometrica[claveBiometrica] = localStorage.getItem(claveBiometrica);
         }
     }

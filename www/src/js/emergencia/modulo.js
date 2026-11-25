@@ -6,7 +6,7 @@ let emergencyCurrentPhone = null;
  * Requiere la sesión API del usuario (X-Auth-Token).
  */
 const emergencyRequest = (path, method, data, success, error) => {
-    const authToken = localStorage.getItem('authToken');
+    const authToken = medsdiGetAuthToken();
 
     if (!authToken) {
         if (typeof error === 'function') {
@@ -145,7 +145,7 @@ const abrirMedicoEmergenciaDesdeLogin = () => {
 const volverDesdeEmergencia = () => {
     const entryPoint = sessionStorage.getItem('emergencyEntryPoint');
 
-    if (entryPoint === 'login' || !localStorage.getItem('authToken')) {
+    if (entryPoint === 'login' || !medsdiGetAuthToken()) {
         sessionStorage.removeItem('emergencyEntryPoint');
         vista('login', 'fade');
         return;
@@ -169,7 +169,7 @@ const cargarMedicoEmergencia = () => {
     emergencyContingencyMode = false;
     emergencyCurrentPhone = null;
 
-    const authToken = localStorage.getItem('authToken');
+    const authToken = medsdiGetAuthToken();
 
     if (!authToken) {
         return cargarMedicoEmergenciaContingencia();
@@ -601,7 +601,7 @@ $(document).on('pageshow', '#index', function () {
  * 2) si expiró, intenta automáticamente UUID + emergency_token.
  */
 const cargarMedicoEmergenciaResumen = () => {
-    const authToken = localStorage.getItem('authToken');
+    const authToken = medsdiGetAuthToken();
 
     if (authToken) {
         emergencyRequest('', 'GET', null, function (response) {

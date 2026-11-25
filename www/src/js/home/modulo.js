@@ -293,7 +293,7 @@ const consultarSinLoader = (ruta, datos, alExito) => {
         url: MEDSDI_API_URL + ruta,
         data: datos,
         dataType: 'json',
-        headers: { 'Accept': 'application/json', 'X-Auth-Token': localStorage.getItem('authToken') },
+        headers: { 'Accept': 'application/json', 'X-Auth-Token': medsdiGetAuthToken() },
         timeout: 15000,
         success: alExito
     });
@@ -303,7 +303,7 @@ const cargarResumenHome = () => {
     var $raiz = $('#index .home-resumen');
     renderizarResumenHome(construirSlidesHome([]), $raiz);
 
-    if (!localStorage.getItem('authToken') || localStorage.getItem('rolActivo') === 'Profesional') return;
+    if (!medsdiGetAuthToken() || localStorage.getItem('rolActivo') === 'Profesional') return;
 
     consultarSinLoader('/paciente/agenda', { id_paciente: _SESSION('id_usuario') }, function(resp) {
         if (resp && resp.estado == 1 && Array.isArray(resp.horas)) {
@@ -320,7 +320,7 @@ const cargarResumenProfesional = () => {
     };
     pintar();
 
-    if (!localStorage.getItem('authToken') || localStorage.getItem('rolActivo') !== 'Profesional') return;
+    if (!medsdiGetAuthToken() || localStorage.getItem('rolActivo') !== 'Profesional') return;
 
     consultarSinLoader('/profesional/agenda', { id_lugar_atencion: '', fecha: hoyIsoHome() }, function(resp) {
         datos.agenda = resp && Array.isArray(resp.registros) ? resp.registros : [];
@@ -373,19 +373,37 @@ $(document).on('pageshow', '#examenesro', function() {
 });
 
 $(document).on('click', '.js-ver-consentimiento', function() {
-    abrirConsentimiento($(this).attr('data-consentimiento-url'));
+    try {
+        medsdiShowPatientDocument($(this).attr('data-consentimiento-url'));
+    } catch (error) { msg('Documento', 'No fue posible abrir el documento. Verifica tu sesión.'); }
 });
 
 $(document).on('click', '.js-ver-receta', function() {
-    abrirConsentimiento($(this).attr('data-receta-url'));
+    try {
+        medsdiShowPatientDocument($(this).attr('data-receta-url'));
+    } catch (error) { msg('Documento', 'No fue posible abrir el documento. Verifica tu sesión.'); }
 });
 
 $(document).on('click', '.js-ver-examen', function() {
-    abrirDocumentoClinico($(this).attr('data-examen-url'), 'examen');
+    try {
+        medsdiShowExamDocument($(this).attr('data-examen-url'), $(this).attr('data-examen-mime'));
+    } catch (error) { msg('No fue posible abrir el examen. Verifica tu sesión.'); }
 });
+
+let proximoTipoAutorizacion = null;
+let tipoAutorizacionActual = null;
 
 $(document).on("pageshow", "#autorizaciones_sdi", function () {
     configurarFooterAutorizaciones();
+    tipoAutorizacionActual = proximoTipoAutorizacion;
+    proximoTipoAutorizacion = null;
+    const titulacion = {2: 'Autorizaciones de FMU', 4: 'Autorizaciones de documentos'};
+    $(this).find('.perfil-header p').text(titulacion[tipoAutorizacionActual] || 'Mis autorizaciones');
+    autorizacionesRegistros = [];
+    autorizacionesFiltroActivo = 'pendientes';
+    actualizarContadoresAutorizaciones();
+    const requestId = ++listLogDeviceRequestId;
+    listLogDeviceEnCurso = false;
 
     // La primera vista prioriza las solicitudes que requieren acción.
     if (!autorizacionesFiltroActivo) {
@@ -394,18 +412,15 @@ $(document).on("pageshow", "#autorizaciones_sdi", function () {
 
     // Primero verificamos el dispositivo. Solo si está OK cargamos autorizaciones.
     checkDevice(function (deviceReady) {
-        if (!deviceReady) {
-            return;
-        }
-
-        // Fuerza una recarga al entrar, pero manteniendo protección
-        // contra solicitudes simultáneas.
-        list_log_device();
+        if (!deviceReady || requestId !== listLogDeviceRequestId) return;
+        list_log_device(true);
     }, true);
 });
 
 $(document).on('pagehide', '#autorizaciones_sdi', function () {
-    // Solo liberamos la lista pesada. El detalle pertenece a otra página.
+    listLogDeviceRequestId++;
+    listLogDeviceEnCurso = false;
+    autorizacionesRegistros = [];
     $('#list_log_reg').empty();
 });
 
@@ -419,7 +434,7 @@ const PAGINAS_SIN_MENU_INFERIOR = ['login', 'seleccionar-rol', 'index', 'inicio-
 
 const menuInferiorHtml = (profesional) => {
     var item = function(onclick, icono, texto) {
-        return '<div class="col-xs-4 pt10 pb10 text-center">' +
+        return '<div class="col-xs-3 pt10 pb10 text-center">' +
             '<p class="color-blanco size12" onclick="' + onclick + '"><img class="mb10" width="20" src="src/images/' + icono + '"><br>' + texto + '</p>' +
             '</div>';
     };
@@ -428,6 +443,7 @@ const menuInferiorHtml = (profesional) => {
         (profesional
             ? item("vista('agenda-profesional'); cargarAgendaProfesional()", 'citas.svg', 'Agenda')
             : item("vista('citas'); solicitarMisHorasMedicas()", 'citas.svg', 'Citas')) +
+        item("vista('videollamadas')", 'citas.svg', 'Video') +
         item('cerrarSesion()', 'salir.svg', 'Cerrar sesión') +
         '</div>';
 };
@@ -727,7 +743,7 @@ const guardarFotoPerfilApp = () => {
         data: formData,
         headers: {
             'Accept': 'application/json',
-            'X-Auth-Token': localStorage.getItem('authToken')
+            'X-Auth-Token': medsdiGetAuthToken()
         },
         contentType: false,
         processData: false,
@@ -799,8 +815,8 @@ const cambiarClaveDispositivoApp = () => {
         clave_nueva: nueva,
         clave_nueva_confirmation: confirmacion
     }, function(resp) {
-        localStorage.setItem('password', nueva);
-        $('#pass_device').val(nueva);
+        localStorage.removeItem('password');
+        $('#pass_device').val('');
         if (typeof actualizarSecretoBiometricoApp === 'function') {
             actualizarSecretoBiometricoApp(nueva);
         }
@@ -814,14 +830,9 @@ const cambiarClaveDispositivoApp = () => {
     }, 'PUT');
 };
 
-const abrirVideollamadaApp = (url) => {
-    if (!url) return;
-    if (window.cordova && cordova.InAppBrowser) {
-        cordova.InAppBrowser.open(url, '_blank', 'location=yes,mediaPlaybackRequiresUserAction=no');
-    } else {
-        window.open(url, '_blank');
-    }
-};
+const abrirVideollamadaApp = url => medsdiOpenVideoCall(url);
+
+$(document).on('click','.js-video-app',function(){abrirVideollamadaApp($(this).attr('data-video-endpoint'));});
 
 const fechaLocalAgendaProfesional = (fecha) => {
     var year = fecha.getFullYear();
@@ -881,13 +892,12 @@ const cargarAgendaProfesional = (idLugar) => {
             registros.forEach(function(hora) {
                 var video = hora.es_telemedicina
                     ? (hora.puede_conectarse && hora.video_url
-                        ? '<div class="btn-app7 mt10" onclick="abrirVideollamadaApp(\'' +
-                            hora.video_url + '\')">Iniciar videollamada</div>'
+                        ? '<button type="button" class="btn-app7 mt10 js-video-app" data-video-endpoint="' + escaparTextoConsentimiento(hora.video_url) + '">Iniciar videollamada</button>'
                         : '<div class="btn-app8 mt10">Telemedicina: ' +
                             escaparTextoConsentimiento(hora.estado) + '</div>')
                     : '';
                 html += '<div class="card-button-dos agenda-profesional-cita mb20">' +
-                    '<p class="agenda-profesional-paciente">' + escaparTextoConsentimiento(hora.paciente) + '</p>' +
+                    '<p class="agenda-profesional-paciente">' + escaparTextoConsentimiento(String(hora.paciente || 'Paciente').toLocaleUpperCase('es-CL')) + '</p>' +
                     '<div class="agenda-profesional-detalle">' +
                     '<p><b>Fecha</b><span>' + escaparTextoConsentimiento(fechaEsp(hora.fecha)) + '</span></p>' +
                     '<p><b>Horario</b><span>' + escaparTextoConsentimiento(hora.hora_inicio) +
@@ -1098,7 +1108,7 @@ const checkDevice = (onReady, silencioso) => {
             }
 
             if (!resp.registros || !resp.registros.length) {
-                console.error('[MED-SDI] Respuesta checkDevice sin registros.', resp);
+                console.error('[MED-SDI] Dispositivo no disponible.');
                 resolverCallbacksCheckDevice(false);
                 return;
             }
@@ -1114,10 +1124,9 @@ const checkDevice = (onReady, silencioso) => {
                 return;
             }
 
-            if (resp.password) {
-                setSession('password', resp.password);
-                $('#pass_device').val(resp.password);
-            }
+            // El servidor nunca devuelve el PIN.
+            localStorage.removeItem('password');
+            $('#pass_device').val('');
 
             if (resp.registros[0].emergency_token) {
                 localStorage.setItem(
@@ -1311,6 +1320,7 @@ const registerDevice = () => {
     api.request(
         datos,
         function (resp) {
+            $('#pass_device, #password_desbloqueo').val('');
             
             if (resp.estado == 1) {
                 navigator.notification.alert(
@@ -1338,7 +1348,8 @@ const registerDevice = () => {
             cargando(0); 
 
         },
-        function (resp) { 
+        function (resp) {
+            $('#pass_device, #password_desbloqueo').val('');
             cargando(0); 
             msg('Check Device', 'Error en el registro', 'error');
 
@@ -1362,6 +1373,19 @@ const escaparTextoConsentimiento = (valor) => {
 
 const abrirDocumentoClinico = (url, tipo) => {
     if (!url) {
+        return;
+    }
+
+    let documentoUrl;
+    try {
+        documentoUrl = new URL(url, MEDSDI_WEB_URL);
+        if (documentoUrl.protocol !== 'https:' || documentoUrl.username || documentoUrl.password ||
+            !['https://medichile.cl', 'https://med-sdi.cl'].includes(documentoUrl.origin)) {
+            throw new Error('Origen no permitido');
+        }
+        url = documentoUrl.href;
+    } catch (error) {
+        msg('Documento', 'El enlace del documento no es válido.', 'error');
         return;
     }
 
@@ -1499,7 +1523,7 @@ const list_consentimientos = () => {
                     titulo: tipo,
                     estado: estado,
                     estadoClase: claseEstadoDocumento(registro.estado_consentimiento),
-                    datos: [['Fecha emisión', fecha], ['Profesional', profesional]],
+                    datos: [['Fecha emisión', fecha], ['Profesional', profesional], ['Documento', pdfUrl ? 'Disponible' : 'Pendiente de revisión']],
                     boton: pdfUrl
                         ? '<button type="button" data-role="none" class="examen-btn js-ver-consentimiento" ' +
                             'data-consentimiento-url="' + pdfUrl + '">Ver consentimiento</button>'
@@ -1556,7 +1580,7 @@ const list_recetas_paciente = () => {
 
                 html += tarjetaDocumentoClinico({
                     titulo: tipo,
-                    estado: cantidad + (cantidad === 1 ? ' medicamento' : ' medicamentos'),
+                    estado: pdfUrl ? cantidad + (cantidad === 1 ? ' medicamento' : ' medicamentos') : 'Documento pendiente de revisión',
                     estadoClase: 'examen-estado-revisado',
                     datos: [['Fecha emisión', fecha], ['Diagnóstico', diagnostico], ['Profesional', profesional]],
                     boton: pdfUrl
@@ -1631,7 +1655,7 @@ const list_examenes_paciente = () => {
                     if (url) {
                         botones +=
                             '<button type="button" data-role="none" class="examen-btn js-ver-examen" ' +
-                                'data-examen-url="' + url + '">' +
+                                'data-examen-url="' + url + '" data-examen-mime="' + escaparTextoConsentimiento(archivo.mime || '') + '">' +
                                 escaparTextoConsentimiento(etiqueta) +
                             '</button>';
                     }
@@ -2522,8 +2546,8 @@ const renderizarCitasPaciente = () => {
         ` : '';
 
         const botonVideoHtml = hora.es_telemedicina && hora.puede_conectarse && hora.video_url ? `
-                <button type="button" data-role="none" class="cita-btn videollamada"
-                        onclick="abrirVideollamadaApp('${hora.video_url}')">
+                <button type="button" data-role="none" class="cita-btn videollamada js-video-app"
+                        data-video-endpoint="${escaparTextoConsentimiento(hora.video_url)}">
                     Iniciar videollamada
                 </button>
             ` : '';
@@ -3238,12 +3262,11 @@ const cargarHorasDisponibles = () => {
         return;
     }
 
-    const datos = {
-        id_profesional: getSession('id_profesional_seleccionado'),
-        id_lugar: getSession('id_lugar_seleccionado'),
-        fecha: fechaSeleccionada,
-        tipo_agenda: getSession('tipo_agenda_seleccionado')
-    };
+    let datos;
+    try {datos=window.medsdiBookingInput.availability({professional:getSession('id_profesional_seleccionado'),place:getSession('id_lugar_seleccionado'),
+        mode:getSession('tipo_agenda_seleccionado'),procedure:getSession('id_procedimiento_seleccionado')},fechaSeleccionada);}
+    catch {msg('Horario','Revisa el profesional, servicio, prestación y fecha seleccionados.','warning');return;}
+
 
     cargando(1);
 
@@ -3359,8 +3382,8 @@ const enviarCorreoValidarEquipo = () => {
     api.request(
         datos,
         function (resp) {
-            LOG('correo de registro de equipo:'+resp.envio_correo);
-            if (resp.envio_correo.estado == 1) {
+
+            if (resp.ya_enlazado || (resp.envio_correo && resp.envio_correo.estado == 1)) {
                 msg('Correo de activación', 'Correo Enviado', 'success');  
             }else{
                 msg('Correo de activación', 'Problemas al enviar el correo', 'error');
@@ -3373,17 +3396,7 @@ const enviarCorreoValidarEquipo = () => {
         "POST");
 
 }
-const openReceta = (url) => {
-    console.log("Click detectado. URL:", url);
-    if (!cordova.InAppBrowser) {
-        console.log("InAppBrowser no disponible");
-    } else {
-        // cordova.InAppBrowser.open(url, '_blank', 'location=yes');
-        // console.log("Intento de abrir InAppBrowser");
-          const gviewUrl = "https://docs.google.com/gview?embedded=true&url=" + encodeURIComponent(url);
-        cordova.InAppBrowser.open(gviewUrl, '_blank', 'location=yes');
-    }
-}
+const openReceta = (url) => abrirDocumentoClinico(url, 'receta');
 
 const formatearRut = (rut) => {
     // Eliminar puntos, guiones y espacios
@@ -3590,18 +3603,11 @@ const confirmarHoraMedica = async (idHora, fecha, hora) => {
         return;
     }
 
-    const datos = {
-        id_profesional: getSession('id_profesional_seleccionado'),
-        id_lugar: getSession('id_lugar_seleccionado'),
-        tipo_agenda: getSession('tipo_agenda_seleccionado'),
-        tipo_hora_medica: getSession('tipo_hora_medica_seleccionado') || 'C',
-        id_procedimiento: getSession('id_procedimiento_seleccionado') || null,
-        examen: getSession('nombre_procedimiento_seleccionado') || '',
-        id_hora: idHora,
-        fecha: fecha,
-        hora: hora,
-        token: "mobile-original-" + Date.now()
-    };
+    let datos;
+    try {datos=window.medsdiBookingInput.reservation({professional:getSession('id_profesional_seleccionado'),place:getSession('id_lugar_seleccionado'),
+        mode:getSession('tipo_agenda_seleccionado'),procedure:getSession('id_procedimiento_seleccionado')},fecha,hora);}
+    catch {msg('Reserva','Revisa el profesional, servicio, prestación y horario seleccionados.','warning');return;}
+
 
     cargando(1);
 
@@ -3609,7 +3615,6 @@ const confirmarHoraMedica = async (idHora, fecha, hora) => {
     api.request(
         datos,
         function (resp) {
-            console.log('Respuesta confirmar hora:', resp);
 
             if (resp.estado == 1) {
                 msg('Hora Confirmada', 'La hora ha sido confirmada correctamente', 'success');
@@ -3621,10 +3626,9 @@ const confirmarHoraMedica = async (idHora, fecha, hora) => {
             solicitarMisHorasMedicas();
         },
         function (resp) {
-            console.error('Error confirmando hora:', resp);
             cargando(0);
-            var mensaje = resp && resp.responseJSON && resp.responseJSON.msj
-                ? resp.responseJSON.msj
+            var mensaje = resp && resp.responseJSON && (resp.responseJSON.msj || resp.responseJSON.message)
+                ? (resp.responseJSON.msj || resp.responseJSON.message)
                 : 'No fue posible confirmar la hora.';
             msg('Confirmar Hora', mensaje, 'error');
         },
@@ -4144,20 +4148,20 @@ const list_log_device = (forzar) => {
     $('#autorizaciones_filtro_resumen').text('Actualizando autorizaciones...');
 
     var api = new Api("mobile-authorization", "requests");
+    const tipo = tipoAutorizacionActual;
 
     api.request(
-        {},
+        tipo ? {tipo} : {},
         function (resp) {
-            listLogDeviceEnCurso = false;
-
             if (requestId !== listLogDeviceRequestId) {
                 return;
             }
+            listLogDeviceEnCurso = false;
 
             listLogDeviceUltimaCarga = Date.now();
 
             LOG('list log device:' + resp.estado);
-            console.log('[MED-SDI] Autorizaciones respuesta:', resp);
+
 
             autorizacionesRegistros = (
                 resp.estado == 1 && Array.isArray(resp.registros)
@@ -4167,20 +4171,12 @@ const list_log_device = (forzar) => {
             filtrarAutorizaciones(autorizacionesFiltroActivo);
         },
         function (xhr, status, error) {
-            listLogDeviceEnCurso = false;
-
             if (requestId !== listLogDeviceRequestId) {
                 return;
             }
+            listLogDeviceEnCurso = false;
 
-            console.error('[MED-SDI] AUTORIZACIONES ERROR', {
-                status: xhr ? xhr.status : null,
-                responseText: xhr ? xhr.responseText : null,
-                responseJSON: xhr ? xhr.responseJSON : null,
-                ajaxStatus: status,
-                error: error,
-                api: typeof MEDSDI_API_URL !== 'undefined' ? MEDSDI_API_URL : ''
-            });
+            console.warn('No se pudieron cargar las autorizaciones', {status: xhr?.status});
 
             var mensaje = 'No fue posible cargar las autorizaciones.';
 

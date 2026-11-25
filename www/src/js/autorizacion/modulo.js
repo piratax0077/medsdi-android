@@ -1,3 +1,12 @@
+const verificarPinEnServidor = (pin, exito) => {
+    const api = new Api('mobile-authorization', 'device/verify-pin');
+    api.request({
+        uuid: obtenerUuidDispositivo(), credential: String(pin)
+    }, function() { exito(); }, function(xhr) {
+        msg('Clave SDI', (xhr.responseJSON || {}).message || 'No fue posible verificar la clave.', 'error');
+    }, 'POST');
+};
+
 $(document).on( "pageshow","#autorizacion",function( event ) {
     const esProfesional = localStorage.getItem('rolActivo') === 'Profesional';
     const $opcionesFooter = $('#autorizacion')
@@ -166,19 +175,14 @@ const registrarSecretoBiometricoApp = (pin, exito, error) => {
 
 const activarBiometriaApp = () => {
     var pinIngresado = $.trim($('#perfil_app_biometria_pin').val());
-    var pinDispositivo = localStorage.getItem('password') || $('#pass_device').val();
 
     if (!/^\d{4}$/.test(pinIngresado)) {
         msg('Huella digital', 'Ingresa el PIN actual de 4 dígitos de este dispositivo.', 'error');
         $('#perfil_app_biometria_pin').focus();
         return;
     }
-    if (pinIngresado !== pinDispositivo) {
-        msg('Huella digital', 'La clave actual no es correcta.', 'error');
-        return;
-    }
-
-    comprobarBiometriaApp(function() {
+    verificarPinEnServidor(pinIngresado, function() {
+      comprobarBiometriaApp(function() {
         registrarSecretoBiometricoApp(pinIngresado, function() {
             localStorage.setItem(claveBiometriaApp(), '1');
             $('#perfil_app_biometria_pin').val('');
@@ -189,6 +193,7 @@ const activarBiometriaApp = () => {
         });
     }, function(error) {
         msg('Huella digital', (error && error.message) || 'La biometría no está disponible.', 'error');
+    });
     });
 };
 
@@ -212,15 +217,14 @@ const actualizarEstadoLoginBiometricoApp = () => {
 const activarLoginBiometricoApp = () => {
     var password = $('#perfil_app_password_login').val();
     var email = _SESSION('email') || '';
-    var pin = localStorage.getItem('password') || $('#pass_device').val() || '';
 
     if (!password) {
         msg('Ingreso con huella', 'Ingresa la contraseña actual de tu cuenta.', 'error');
         return;
     }
     comprobarBiometriaApp(function() {
-        registrarBovedaBiometricaApp(
-            {pin: pin, user: email, pass: password},
+        const guardar = (pinProtegido) => registrarBovedaBiometricaApp(
+            {pin: pinProtegido, user: email, pass: password},
             'Confirma tu huella para activar el inicio de sesión biométrico.',
             function() {
                 localStorage.setItem('biometria_login_habilitada', '1');
@@ -238,6 +242,15 @@ const activarLoginBiometricoApp = () => {
                 msg('Ingreso con huella', (error && error.message) || 'No fue posible activar el ingreso biométrico.', 'error');
             }
         );
+        if (biometriaHabilitadaApp()) {
+            Fingerprint.loadBiometricSecret(opcionesBiometriaApp('Confirma tu huella para conservar la clave SDI.'),
+                function(secret) {
+                    try { guardar(decodificarBovedaBiometricaApp(secret).pin || ''); }
+                    catch (error) { msg('Huella digital', 'No fue posible recuperar la clave protegida.', 'error'); }
+                }, function() { msg('Huella digital', 'Operación cancelada.', 'warning'); });
+        } else {
+            guardar('');
+        }
     }, function(error) {
         msg('Ingreso con huella', (error && error.message) || 'La biometría no está disponible.', 'error');
     });
@@ -249,64 +262,75 @@ const desactivarLoginBiometricoApp = () => {
     msg('Ingreso con huella', 'El inicio de sesión con huella fue desactivado.', 'success');
 };
 
-const actualizarBotonLoginBiometricoApp = () => {
-    var $boton = $('#login_con_biometria');
-    var habilitado = loginBiometricoHabilitadoApp();
-
-    // Se mantiene oculto si el usuario no activó esta función o si el
-    // plugin todavía no está disponible (por ejemplo, antes de deviceready).
-    $boton.hide();
-    if (!habilitado || typeof Fingerprint === 'undefined') return;
-
-    // Tener el plugin instalado no garantiza que exista una huella enrolada.
-    comprobarBiometriaApp(function() {
-        $boton.show();
-    }, function() {
-        $boton.hide();
-    });
+var loginBiometricoVistaApp={manual:false,intentado:false,pendiente:false,enviando:false,version:0};
+var loginBiometricoDeviceReadyApp=false;
+const paginaLoginActivaApp=()=>$('#login').hasClass('ui-page-active');
+const cancelarInicioBiometricoApp=()=>{loginBiometricoVistaApp.version++;loginBiometricoVistaApp.pendiente=false;loginBiometricoVistaApp.enviando=false;$('#pass').val('');};
+const prepararLoginBiometricoApp=()=>{
+    if(loginBiometricoVistaApp.pendiente || loginBiometricoVistaApp.enviando)return;
+    loginBiometricoVistaApp.version++;loginBiometricoVistaApp.manual=false;loginBiometricoVistaApp.intentado=false;
+    $('#pass').val('');$('#login_estado_ingreso').text('').hide();
 };
-
-const ingresarConBiometriaApp = () => {
-    if (!loginBiometricoHabilitadoApp() || typeof Fingerprint === 'undefined') {
-        msg('Ingreso con huella', 'El ingreso biométrico no está habilitado.', 'warning');
+const mostrarLoginManualApp=mensaje=>{
+    loginBiometricoVistaApp.manual=true;loginBiometricoVistaApp.pendiente=false;loginBiometricoVistaApp.enviando=false;
+    $('#pass').val('');$('#login_credenciales').show();
+    $('#login_con_biometria .login-separador').show();
+    $('#login_estado_ingreso').text(mensaje || 'Ingresa tu correo y contraseña para continuar.').show();
+};
+const falloLoginBiometricoApp=(invalidar,mensaje)=>{
+    if(!loginBiometricoVistaApp.enviando)return false;
+    if(invalidar)limpiarLoginBiometricoApp();
+    mostrarLoginManualApp(mensaje);if(invalidar)$('#login_con_biometria').hide();return true;
+};
+const finalizarLoginBiometricoApp=()=>{loginBiometricoVistaApp.enviando=false;loginBiometricoVistaApp.pendiente=false;};
+const actualizarBotonLoginBiometricoApp = () => {
+    const habilitado=loginBiometricoHabilitadoApp(),boton=$('#login_con_biometria');
+    boton.hide();
+    if(!habilitado){$('#login_credenciales').show();return;}
+    $('#login_credenciales').toggle(loginBiometricoVistaApp.manual);
+    $('#login_con_biometria .login-separador').toggle(loginBiometricoVistaApp.manual);
+    if(typeof Fingerprint==='undefined'){
+        if(!window.cordova || loginBiometricoDeviceReadyApp)mostrarLoginManualApp('Ingresa tu correo y contraseña para continuar.');
         return;
     }
-
-    Fingerprint.loadBiometricSecret(
-        opcionesBiometriaApp('Confirma tu huella para ingresar a MED-SDI.'),
-        function(secreto) {
-            try {
-                var boveda = decodificarBovedaBiometricaApp(secreto);
-                if (!boveda.user || !boveda.pass) {
-                    throw new Error('No hay credenciales de inicio de sesión protegidas.');
-                }
-                localStorage.setItem('biometria_login_habilitada', '1');
-                localStorage.setItem('biometria_login_usuario', boveda.user);
-                localStorage.setItem(
-                    'biometria_login_uuid',
-                    typeof obtenerUuidDispositivo === 'function'
-                        ? obtenerUuidDispositivo()
-                        : (localStorage.getItem('uuid') || '')
-                );
-                if (boveda.pin) {
-                    sessionStorage.setItem('biometria_pin_recuperada', '1');
-                }
-                $('#user').val(boveda.user);
-                $('#pass').val(boveda.pass);
-                ingresarLogin();
-            } catch (error) {
-                msg('Ingreso con huella', error.message, 'error');
-            }
-        },
-        function(error) {
-            if (error && Number(error.code) === -113) {
-                limpiarLoginBiometricoApp();
-                actualizarBotonLoginBiometricoApp();
-            }
-            msg('Ingreso con huella', (error && error.message) || 'No fue posible validar la huella.', 'error');
+    const version=loginBiometricoVistaApp.version;
+    comprobarBiometriaApp(function(){
+        if(version!==loginBiometricoVistaApp.version)return;
+        boton.show();
+        if(!paginaLoginActivaApp() || medsdiGetAuthToken())return;
+        if(!loginBiometricoVistaApp.manual)$('#login_credenciales').hide();
+        if(!loginBiometricoVistaApp.manual && !loginBiometricoVistaApp.intentado && !loginBiometricoVistaApp.pendiente && !loginBiometricoVistaApp.enviando){
+            loginBiometricoVistaApp.intentado=true;ingresarConBiometriaApp();
         }
-    );
+    },function(){if(version!==loginBiometricoVistaApp.version)return;mostrarLoginManualApp('La huella no está disponible. Ingresa tu correo y contraseña.');boton.hide();});
 };
+const ingresarConBiometriaApp = () => {
+    if(loginBiometricoVistaApp.pendiente || loginBiometricoVistaApp.enviando)return;
+    if(!loginBiometricoHabilitadoApp() || typeof Fingerprint==='undefined'){
+        mostrarLoginManualApp();return;
+    }
+    loginBiometricoVistaApp.pendiente=true;loginBiometricoVistaApp.intentado=true;
+    $('#login_credenciales').hide();$('#login_estado_ingreso').text('Confirma tu huella para ingresar.').show();
+    const version=loginBiometricoVistaApp.version;
+    Fingerprint.loadBiometricSecret(opcionesBiometriaApp('Confirma tu huella para ingresar a MED-SDI.'),function(secreto){
+        if(version!==loginBiometricoVistaApp.version)return;
+        loginBiometricoVistaApp.pendiente=false;
+        if(!paginaLoginActivaApp() || medsdiGetAuthToken())return;
+        try{
+            const boveda=decodificarBovedaBiometricaApp(secreto);
+            if(!boveda.user || !boveda.pass)throw new Error('Credencial no disponible.');
+            if(boveda.pin)sessionStorage.setItem('biometria_pin_recuperada','1');
+            $('#user').val(boveda.user);$('#pass').val(boveda.pass);
+            loginBiometricoVistaApp.enviando=true;ingresarLogin();
+        }catch(error){mostrarLoginManualApp('No fue posible ingresar con huella. Ingresa tu correo y contraseña.');}
+    },function(error){
+        if(version!==loginBiometricoVistaApp.version)return;
+        loginBiometricoVistaApp.pendiente=false;
+        if(error && Number(error.code)===-113){limpiarLoginBiometricoApp();$('#login_con_biometria').hide();}
+        mostrarLoginManualApp('No se completó la autenticación por huella. Ingresa tu correo y contraseña.');
+    });
+};
+document.addEventListener('deviceready',()=>{loginBiometricoDeviceReadyApp=true;actualizarBotonLoginBiometricoApp();},false);
 
 const restaurarEstadoBiometricoTrasLogin = () => {
     if (sessionStorage.getItem('biometria_pin_recuperada') !== '1') return;
@@ -361,12 +385,6 @@ const confirmarBiometriaAccionApp = (descripcion) => {
 
                     if (!boveda.pin) {
                         throw new Error('No hay una clave SDI protegida con huella.');
-                    }
-
-                    var pinDispositivo = localStorage.getItem('password') || $('#pass_device').val() || '';
-
-                    if (pinDispositivo && pinDispositivo !== '0' && String(boveda.pin) !== String(pinDispositivo)) {
-                        throw new Error('La credencial biométrica ya no coincide con la clave actual del dispositivo.');
                     }
 
                     resolve({
@@ -443,42 +461,11 @@ const respuestaBiometrica = () => {
 const respuesta = (estado) => {
 
     var pass_device1 = $.trim($('#autorizacion #password_').val());
-    var pass_device2 = localStorage.getItem('password') || $('#pass_device').val();
-
-    // Nunca usar el valor inicial "0" como clave de autorización.
-    if (!pass_device2 || pass_device2 === '0') {
-        if (typeof checkDevice === 'function') {
-            checkDevice(function (claveDisponible) {
-                if (claveDisponible) {
-                    respuesta(estado);
-                    return;
-                }
-
-                navigator.notification.alert(
-                    'El dispositivo no tiene una clave activa para esta cuenta.',
-                    function () {},
-                    'Clave no disponible',
-                    'Cerrar'
-                );
-            }, true);
-        }
+    if (!/^\d{4}$/.test(pass_device1)) {
+        msg('Autorización', 'Ingresa tu clave SDI de 4 dígitos.', 'error');
         return false;
     }
 
-    if(pass_device1!=pass_device2)
-    {
-        if($('#uuid').val()!=0)
-        {
-            navigator.notification.alert('Clave Incorrecta, vuelva a ingresar.', ()=>{}, ['Clave Incorrecta'], ['Cerrar'])
-            $('#autorizacion #password_').val('').focus();
-            return false;
-        }else{
-            alert('Clave Incorrecta');
-            $('#autorizacion #password_').val('').focus();
-            return false;
-        }
-    }
-    
     var id = $('#autorizacion #id_log_autorizacion').val();
 
     if (!id) {
@@ -490,6 +477,7 @@ const respuesta = (estado) => {
 
     datos.estado = estado;
     datos.credential = pass_device1;
+    $('#autorizacion #password_').val('');
     datos.uuid = typeof obtenerUuidDispositivo === 'function'
         ? obtenerUuidDispositivo()
         : (localStorage.getItem('uuid') || '');

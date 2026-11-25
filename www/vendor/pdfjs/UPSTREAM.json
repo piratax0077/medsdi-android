@@ -1,0 +1,30 @@
+{
+  "name": "pdfjs-dist",
+  "version": "6.5.438",
+  "dist": {
+    "shasum": "e7f8986ec4ea04057b5d9d2f0e5b63ea94d2303f",
+    "tarball": "https://registry.npmjs.org/pdfjs-dist/-/pdfjs-dist-6.5.438.tgz",
+    "fileCount": 570,
+    "integrity": "sha512-vg8Pw1x+AFKy4AMDvhuWl5cOYV8d698UoEANoFFhc79hqXDnZQqnOXoxw3HG907WHOg1JYOvLhP756boddFxpA==",
+    "signatures": [
+      {
+        "sig": "MEYCIQCHpARAHxjhmQYrv76T3PzkM9FflAZUZOyhnmSiAeva3wIhAKNa1q++oA9OwGCdoJqR618RG7DqFWmYTuk34Mlze1JB",
+        "keyid": "SHA256:DhQ8wR5APBvFHLF/+Tc+AYvPOdTpcIDqOhxsBHRwC7U"
+      },
+      {
+        "sig": "MEUCIQCnhrHziJt7WeagumZHQTRV/H+EbMUo1TGNMxeq3I09/QIgSN1S5hdEoPMghm1+QgwY9ae3lDFuqNfqvCbi6E9fNcg=",
+        "keyid": "SHA256:DhQ8wR5APBvFHLF/+Tc+AYvPOdTpcIDqOhxsBHRwC7U"
+      }
+    ],
+    "attestations": {
+      "url": "https://registry.npmjs.org/-/npm/v1/attestations/pdfjs-dist@6.5.438",
+      "provenance": {
+        "predicateType": "https://slsa.dev/provenance/v1"
+      }
+    },
+    "unpackedSize": 37616588
+  },
+  "engines": {
+    "node": ">=22.13.0 || >=24"
+  }
+}

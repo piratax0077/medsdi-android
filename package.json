@@ -1,11 +1,12 @@
 {
   "name": "com.medichile.app",
   "displayName": "MED-SDI",
-  "version": "1.0.1",
+  "version": "1.0.13",
   "description": "Aplicación móvil de Salud Digital Integrada.",
   "main": "index.js",
   "scripts": {
-    "test": "echo \"Error: no test specified\" && exit 1"
+    "test": "node --test tests/security.test.cjs tests/biometric-login.test.cjs tests/video-access.test.cjs tests/android-build.test.cjs tests/booking-input.test.cjs tests/video-tab.test.cjs",
+    "test:android": "node --test tests/android-build.test.cjs"
   },
   "keywords": [
     "ecosystem:cordova"

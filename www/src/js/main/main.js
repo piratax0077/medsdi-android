@@ -67,7 +67,7 @@ const manejarBotonAtrasApp = (event) => {
 };
 
 function registrarNotificacionesDeSesion() {
-    if (!_SESSION('authToken')) {
+    if (!medsdiGetAuthToken()) {
         return;
     }
 
@@ -109,6 +109,7 @@ const initVariablesGlobales = () =>{
     localStorage.removeItem('pass');
     localStorage.removeItem('user_password');
     localStorage.removeItem('login_password');
+    localStorage.removeItem('password');
     
     var variables = `
     <input type="hidden" id="uuid" value="0" />
@@ -125,7 +126,7 @@ const initVariablesGlobales = () =>{
     // checkDevice termine su consulta al servidor.
     $('#uuid').val(localStorage.getItem('uuid') || '0');
     $('#model_device').val(localStorage.getItem('model_device') || '');
-    $('#pass_device').val(localStorage.getItem('password') || '');
+    $('#pass_device').val('');
 }
 
 const _SESSION = (key) => {

@@ -1,3 +1,5 @@
+$(document).on('pagehide','#login',function(){if(typeof cancelarInicioBiometricoApp==='function')cancelarInicioBiometricoApp();});
+$(document).on('pagebeforeshow','#login',function(){if(typeof prepararLoginBiometricoApp==='function')prepararLoginBiometricoApp();});
 
 $(document).on('pageshow', '#login', function() {
     if (typeof actualizarBotonLoginBiometricoApp === 'function') {
@@ -5,126 +7,19 @@ $(document).on('pageshow', '#login', function() {
     }
 });
 
-// ---------------------------------------------------------------------------
-// Recordar contraseña (opcional: se ofrece con la alerta "Guardar acceso").
-// Se guarda únicamente en este dispositivo y se puede olvidar desde Mi perfil.
-// cerrarSesion() conserva las claves con prefijo "recordar_login_".
-// ---------------------------------------------------------------------------
-const RECORDAR_LOGIN_USUARIO = 'recordar_login_usuario';
-const RECORDAR_LOGIN_PASS = 'recordar_login_pass';
-
-const codificarLoginRecordado = (texto) => {
-    var bytes = new TextEncoder().encode(String(texto));
-    return Array.prototype.map.call(bytes, function (b) {
-        return b.toString(16).padStart(2, '0');
-    }).join('');
-};
-
-const decodificarLoginRecordado = (hex) => {
-    try {
-        if (!hex || hex.length % 2 !== 0 || !/^[a-f0-9]+$/i.test(hex)) return '';
-        return new TextDecoder().decode(new Uint8Array(hex.match(/.{2}/g).map(function (h) {
-            return parseInt(h, 16);
-        })));
-    } catch (e) {
-        return '';
-    }
-};
-
-const obtenerLoginRecordado = () => {
-    var usuario = $.trim(localStorage.getItem(RECORDAR_LOGIN_USUARIO) || '');
-    var pass = decodificarLoginRecordado(localStorage.getItem(RECORDAR_LOGIN_PASS) || '');
-    return (usuario !== '' && pass !== '') ? {usuario: usuario, pass: pass} : null;
-};
-
-const guardarLoginRecordado = (usuario, pass) => {
-    localStorage.setItem(RECORDAR_LOGIN_USUARIO, usuario);
-    localStorage.setItem(RECORDAR_LOGIN_PASS, codificarLoginRecordado(pass));
-};
-
+// Migración: nunca conservar la contraseña principal en el WebView.
 const borrarLoginRecordado = () => {
-    localStorage.removeItem(RECORDAR_LOGIN_USUARIO);
-    localStorage.removeItem(RECORDAR_LOGIN_PASS);
+    ['recordar_login_usuario', 'recordar_login_pass', 'recordar_login_no_preguntar',
+     'pass', 'user_password', 'login_password', 'password'].forEach(key => localStorage.removeItem(key));
 };
-
-// Se pregunta en cada inicio de sesión hasta que el usuario elija "Guardar"
-// o "No volver a mostrar" (esto último se puede revertir en Mi perfil).
-const RECORDAR_LOGIN_NO_PREGUNTAR = 'recordar_login_no_preguntar';
-
-const preguntarGuardarAcceso = (usuario, pass) => {
-    if (typeof confirmarMedsdi !== 'function') return Promise.resolve();
-    var noMostrarMas = false;
-    return confirmarMedsdi(
-        '¿Guardar acceso para próximas sesiones?',
-        'Evita ingresar tu contraseña cada vez. Puedes desactivarlo en Mi perfil.',
-        {
-            icon: undefined, // sin ícono de interrogación
-            confirmButtonText: 'Guardar',
-            cancelButtonText: 'Ahora no',
-            focusCancel: false,
-            footer: '<a href="#" class="swal-guardar-acceso-omitir">No volver a mostrar este mensaje</a>',
-            customClass: {
-                popup: 'swal-medsdi-popup swal-guardar-acceso',
-                title: 'swal-medsdi-title swal-guardar-acceso-titulo',
-                htmlContainer: 'swal-medsdi-text',
-                confirmButton: 'swal-medsdi-confirm',
-                cancelButton: 'swal-medsdi-cancel',
-                footer: 'swal-guardar-acceso-pie'
-            },
-            didOpen: function (popup) {
-                $(popup).find('.swal-guardar-acceso-omitir').on('click', function (e) {
-                    e.preventDefault();
-                    noMostrarMas = true;
-                    Swal.close();
-                });
-            }
-        }
-    ).then(function (guardar) {
-        if (guardar) {
-            guardarLoginRecordado(usuario, pass);
-            localStorage.removeItem(RECORDAR_LOGIN_NO_PREGUNTAR);
-        } else if (noMostrarMas) {
-            localStorage.setItem(RECORDAR_LOGIN_NO_PREGUNTAR, '1');
-        }
-    }, function () {});
-};
-
-const volverAPreguntarGuardarAcceso = () => {
-    localStorage.removeItem(RECORDAR_LOGIN_NO_PREGUNTAR);
-    actualizarEstadoRecordarLogin();
-    msg('Contraseña recordada', 'La próxima vez que inicies sesión se te preguntará si quieres guardar el acceso.', 'success');
-};
-
-const cargarLoginRecordado = () => {
-    // La contraseña siempre vuelve a mostrarse oculta.
-    $('#pass').attr('type', 'password');
-    $('#login .login-ojo').removeClass('activo').attr('aria-label', 'Mostrar contraseña');
-
-    var recordado = obtenerLoginRecordado();
-    if (recordado) {
-        $('#user').val(recordado.usuario);
-        $('#pass').val(recordado.pass);
-    }
-};
-
 const actualizarEstadoRecordarLogin = () => {
-    var recordado = obtenerLoginRecordado();
-    $('#perfil_app_recordar_estado').text(recordado
-        ? 'Tu contraseña está guardada en este dispositivo para ' + recordado.usuario + '.'
-        : 'No hay una contraseña guardada en este dispositivo.');
-    $('#perfil_app_recordar_desactivar').toggle(!!recordado);
-    $('#perfil_app_recordar_preguntar').toggle(!recordado && localStorage.getItem(RECORDAR_LOGIN_NO_PREGUNTAR) === '1');
-};
-
-const olvidarLoginRecordado = () => {
     borrarLoginRecordado();
-    $('#pass').val('');
-    actualizarEstadoRecordarLogin();
-    msg('Contraseña recordada', 'La contraseña ya no se recordará en este dispositivo.', 'success');
+    $('#perfil_app_recordar_estado').text('La contraseña no se guarda en este dispositivo.');
+    $('#perfil_app_recordar_desactivar, #perfil_app_recordar_preguntar').hide();
 };
-
-$(document).on('pageshow', '#login', cargarLoginRecordado);
-
+const olvidarLoginRecordado = () => { borrarLoginRecordado(); $('#pass').val(''); };
+$(document).on('pageshow', '#login', borrarLoginRecordado);
+borrarLoginRecordado();
 
 let loginBloqueoInterval = null;
 
@@ -177,6 +72,7 @@ const ingresarLogin = () => {
 
     var user = $.trim($('#user').val());
     var pass = $.trim($('#pass').val());
+    const contextoBiometrico=typeof loginBiometricoVistaApp!=='undefined' && loginBiometricoVistaApp.enviando ? loginBiometricoVistaApp.version : null;
 
     if(user=='')
     {
@@ -207,12 +103,13 @@ const ingresarLogin = () => {
         api.request(
         datos,
         function (resp) {
+            if(contextoBiometrico!==null && loginBiometricoVistaApp.version!==contextoBiometrico){cargando(0);return;}
             if (resp.estado == 1) {
                 detenerBloqueoVisualLogin();
-                console.log("LOGIN EXITOSO");
 
                 // Guardar el token para usarlo en futuras peticiones
-                localStorage.setItem('authToken', resp.token);
+                medsdiSetAuthToken(resp.token);
+                if(typeof finalizarLoginBiometricoApp==='function')finalizarLoginBiometricoApp();
                 // El estado del dispositivo y los demás GET autenticados de la
                 // sesión anterior no son válidos para el token recién emitido.
                 if (typeof medsdiClearGetCache === 'function') {
@@ -223,30 +120,18 @@ const ingresarLogin = () => {
                     $('#uuid').val(resp.device_uuid);
                 }
                 inicializarNotificacionesPush();
-                // La contraseña no se conserva salvo que el usuario acepte
-                // "Guardar acceso". Si habilita huella, el plugin la
-                // protege dentro de Android Keystore.
-                localStorage.removeItem('pass');
-                var recordadoPrevio = obtenerLoginRecordado();
+                borrarLoginRecordado();
                 sesionUsuarioInit(resp.user);
                 $('#pass').val('');
                 if (typeof restaurarEstadoBiometricoTrasLogin === 'function') {
                     restaurarEstadoBiometricoTrasLogin();
                 }
-
-                if (recordadoPrevio && recordadoPrevio.usuario === user) {
-                    // Ya tenía el acceso guardado: se actualiza por si cambió la contraseña.
-                    guardarLoginRecordado(user, pass);
-                    prepararSeleccionRoles(resp);
-                } else if (localStorage.getItem(RECORDAR_LOGIN_NO_PREGUNTAR) === '1') {
-                    // Eligió "No volver a mostrar este mensaje".
-                    prepararSeleccionRoles(resp);
-                } else {
-                    preguntarGuardarAcceso(user, pass).then(function () {
-                        prepararSeleccionRoles(resp);
-                    });
-                }
+                prepararSeleccionRoles(resp);
             } else {
+                if(typeof falloLoginBiometricoApp==='function' && falloLoginBiometricoApp(true,resp.bloqueado ? 'Tu acceso está temporalmente bloqueado. Espera antes de reintentar.' : 'Ingresa tu correo y contraseña para continuar.')){
+                    if(resp.bloqueado)iniciarBloqueoVisualLogin(parseInt(resp.segundos_restantes || 900,10));
+                    cargando(0);return;
+                }
                 if (resp.bloqueado) {
                     const segundos = parseInt(resp.segundos_restantes || 900, 10);
 
@@ -285,17 +170,14 @@ const ingresarLogin = () => {
         },
         function (resp, status, error) {
             cargando(0);
+            if(contextoBiometrico!==null && loginBiometricoVistaApp.version!==contextoBiometrico)return;
+
+            if(typeof falloLoginBiometricoApp==='function' && falloLoginBiometricoApp(false,'No fue posible completar el ingreso. Puedes intentar con tu correo y contraseña.'))return;
 
             var httpStatus = resp && typeof resp.status !== 'undefined' ? resp.status : 0;
             var responseText = resp && resp.responseText ? resp.responseText : '';
 
-            console.error('ERROR LOGIN MEDSDI', {
-                status: httpStatus,
-                responseText: responseText,
-                ajaxStatus: status || '',
-                error: error || '',
-                backend: (typeof MEDSDI_WEB_URL !== 'undefined' ? MEDSDI_WEB_URL : '')
-            });
+            console.warn('Fallo de ingreso', {status: httpStatus});
 
             var detalle = httpStatus
                 ? 'Error de conexión (HTTP ' + httpStatus + ')'
@@ -332,7 +214,8 @@ const prepararSeleccionRoles = (respuesta) => {
     localStorage.setItem('perfilProfesional', JSON.stringify(respuesta.profesional || null));
 
     if (!roles.length) {
-        localStorage.removeItem('authToken');
+        medsdiClearAuthToken();
+        if(typeof mostrarLoginManualApp==='function')mostrarLoginManualApp();
         msg('Acceso', 'Esta cuenta no posee un perfil Paciente o Profesional habilitado.', 'warning');
         return;
     }
@@ -599,7 +482,6 @@ const recuperarPassword = () =>{
         },
         function (resp) { 
             cargando(0); 
-            console.log(resp);        
             msg('Login', 'Error de conexión', 'error');
         },
         "POST");

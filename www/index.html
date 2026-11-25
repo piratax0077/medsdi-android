@@ -1,7 +1,8 @@
-﻿<!DOCTYPE html>
+<!DOCTYPE html>
 <html>
 <head>
     <meta charset="UTF-8">
+    <meta http-equiv="Content-Security-Policy" content="default-src 'self' data: blob:; script-src 'self' 'unsafe-inline'; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com; font-src 'self' data: https://fonts.gstatic.com; img-src 'self' data: blob: https:; connect-src 'self' https://medichile.cl; frame-src https:; worker-src 'self' blob:; object-src 'none'; base-uri 'self'; form-action 'self'">
     <title>SDI</title>
     <meta name="viewport" content="width=device-width, initial-scale=1">
 
@@ -19,8 +20,8 @@
 
 
     <!-- SweetAlert2 -->
-    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/sweetalert2@11.26.25/dist/sweetalert2.min.css">
-    <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11.26.25/dist/sweetalert2.all.min.js"></script>
+    <link rel="stylesheet" href="src/vendor/sweetalert2.min.css">
+    <script src="src/vendor/sweetalert2.all.min.js"></script>
 
     <!-- Main -->
     <link rel="stylesheet" href="src/css/estilos.css" />
@@ -41,10 +42,14 @@
 
     <!-- Modulos -->
     <script src="src/js/login/modulo.js"></script>
+    <script src="src/js/video/acceso-seguro.js"></script>
+    <script src="src/js/agenda/reserva-segura.js"></script>
     <script src="src/js/home/modulo.js"></script>
+    <script src="src/js/video/pestana.js"></script>
     <script src="src/js/autorizacion/modulo.js"></script>
     <script src="src/js/seguridad/modulo.js"></script>
     <script src="src/js/notificaciones/modulo.js"></script>
+    <script src="src/js/mensajes/adjuntos-seguros.js"></script>
     <script src="src/js/mensajes/modulo.js"></script>
     <script src="src/js/emergencia/modulo.js"></script>
 
@@ -712,6 +717,8 @@
     <div role="main" class="ui-content login-panel">
         <div class="login-panel-contenido" id="cont_i_login">
             <h1 class="login-titulo">Ingresa a tu cuenta</h1>
+            <p id="login_estado_ingreso" role="status" aria-live="polite" style="display:none"></p>
+            <div id="login_credenciales">
             <div class="login-campo">
                 <label for="user" class="floating-label">Correo electrónico</label>
                 <div class="login-input-contenedor">
@@ -734,6 +741,7 @@
                 <span>Ingresar</span>
                 <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M5 12h14M14 7l5 5-5 5"/></svg>
             </button>
+            </div>
             <div id="login_con_biometria" class="login-biometria-bloque" style="display:none">
                 <span class="login-separador"><span>o</span></span>
                 <div class="login-biometria" onclick="ingresarConBiometriaApp()" role="button" tabindex="0">
@@ -863,6 +871,11 @@
             <div class="dashboard-scroll">
             <h1 class="dashboard-pregunta">¿Qué necesitas gestionar?</h1>
             <div class="dashboard-grid profesional-grid">
+                <button type="button" data-role="none" class="dashboard-card" onclick="vista('videollamadas')">
+                    <span class="dashboard-card-icon icon-prof-agenda"></span>
+                    <span class="dashboard-card-copy"><strong>Videollamadas</strong></span>
+                    <span class="dashboard-card-arrow">›</span>
+                </button>
                 <div class="dashboard-card" onclick="vista('agenda-profesional'); cargarAgendaProfesional()" role="button" tabindex="0">
                             <span class="dashboard-card-icon icon-prof-agenda"></span>
                     <div class="dashboard-card-copy">
@@ -1215,6 +1228,12 @@
                     </div>
                     <span class="dashboard-card-arrow">›</span>
                 </div>
+
+                <button id="boton_videollamadas" type="button" data-role="none" class="dashboard-card" onclick="vista('videollamadas')">
+                    <span class="dashboard-card-icon icon-citas"></span>
+                    <span class="dashboard-card-copy"><strong>Videollamadas</strong></span>
+                    <span class="dashboard-card-arrow">›</span>
+                </button>
 
                 <!-- 2. INFORMACIÓN CLÍNICA -->
                 <div id="boton_fmu" class="dashboard-card" onclick="vista('fmu_paciente'); solicitarFmu()" role="button" tabindex="0">
@@ -2558,6 +2577,22 @@
     </div>
 </div>
 <!--CIERRE DISPOSITIVO REGISTRADO-->
+
+<div data-role="page" id="videollamadas">
+    <div data-role="header" style="background-color: #009cdb; color: white;">
+        <h1>Videollamadas</h1>
+    </div>
+    <main role="main" class="ui-content mb60">
+        <div class="cita-acciones">
+            <button type="button" data-role="none" class="cita-btn confirmar" onclick="abrirAutorizacionesVideollamada(4)">Autorizar documentos</button>
+            <button type="button" data-role="none" class="cita-btn confirmar" onclick="abrirAutorizacionesVideollamada(2)">Autorizar FMU</button>
+            <button type="button" data-role="none" id="videollamadas-fmu" class="cita-btn confirmar" onclick="vista('fmu_paciente'); solicitarFmu()">Ver mi FMU</button>
+        </div>
+        <button type="button" data-role="none" class="agenda-profesional-boton" onclick="cargarPestanaVideollamadas()">Actualizar</button>
+        <p id="videollamadas-estado" role="status" aria-live="polite"></p>
+        <div id="videollamadas-lista"></div>
+    </main>
+</div>
 
 <div data-role="page" id="autorizaciones_sdi">
     <div data-role="header" class="header" id="header-ni">

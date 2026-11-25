@@ -1,7 +1,7 @@
 <?xml version='1.0' encoding='utf-8'?>
 <widget id="com.medichile.app"
-    version="1.0.11"
-    android-versionCode="10011"
+    version="1.0.13"
+    android-versionCode="10013"
     xmlns="http://www.w3.org/ns/widgets"
     xmlns:cdv="http://cordova.apache.org/ns/1.0">
 
@@ -19,13 +19,15 @@
 
     <access origin="https://medichile.cl" />
     <access origin="https://med-sdi.cl" />
-    <access origin="http://medsdi.test" />
 
     <allow-intent href="http://*/*" />
     <allow-intent href="https://*/*" />
     <allow-intent href="tel:*" />
 
     <platform name="android">
+        <edit-config file="app/src/main/AndroidManifest.xml" target="/manifest/application" mode="merge" xmlns:android="http://schemas.android.com/apk/res/android">
+            <application android:allowBackup="false" android:usesCleartextTraffic="false" />
+        </edit-config>
 
         <preference
             name="AndroidWindowSplashScreenAnimatedIcon"
@@ -86,4 +88,5 @@
 
     </platform>
 
+    <hook type="after_prepare" src="scripts/prepare-android-security.js" />
 </widget>
