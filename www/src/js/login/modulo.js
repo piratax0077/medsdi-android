@@ -207,12 +207,9 @@ const ingresarLogin = () => {
         api.request(
         datos,
         function (resp) {
-            console.log(resp);
             if (resp.estado == 1) {
                 detenerBloqueoVisualLogin();
-                //console.log(resp);
                 console.log("LOGIN EXITOSO");
-                console.log("Token recibido:", resp.token); // ¡NUEVO!
 
                 // Guardar el token para usarlo en futuras peticiones
                 localStorage.setItem('authToken', resp.token);
