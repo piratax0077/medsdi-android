@@ -171,7 +171,7 @@ const cerrarSesion = () => {
     const configuracionBiometrica = {};
     for (var indice = 0; indice < localStorage.length; indice++) {
         var claveBiometrica = localStorage.key(indice);
-        if (claveBiometrica && (claveBiometrica.indexOf('biometria_') === 0 || claveBiometrica.indexOf('recordar_login_') === 0)) {
+        if (claveBiometrica && claveBiometrica.indexOf('biometria_') === 0) {
             configuracionBiometrica[claveBiometrica] = localStorage.getItem(claveBiometrica);
         }
     }

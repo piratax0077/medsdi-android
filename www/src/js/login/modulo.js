@@ -5,126 +5,15 @@ $(document).on('pageshow', '#login', function() {
     }
 });
 
-// ---------------------------------------------------------------------------
-// Recordar contraseña (opcional: se ofrece con la alerta "Guardar acceso").
-// Se guarda únicamente en este dispositivo y se puede olvidar desde Mi perfil.
-// cerrarSesion() conserva las claves con prefijo "recordar_login_".
-// ---------------------------------------------------------------------------
-const RECORDAR_LOGIN_USUARIO = 'recordar_login_usuario';
-const RECORDAR_LOGIN_PASS = 'recordar_login_pass';
+// Elimina las credenciales persistidas por versiones anteriores al actualizar.
+localStorage.removeItem('recordar_login_pass');
+localStorage.removeItem('recordar_login_usuario');
+localStorage.removeItem('recordar_login_no_preguntar');
 
-const codificarLoginRecordado = (texto) => {
-    var bytes = new TextEncoder().encode(String(texto));
-    return Array.prototype.map.call(bytes, function (b) {
-        return b.toString(16).padStart(2, '0');
-    }).join('');
-};
-
-const decodificarLoginRecordado = (hex) => {
-    try {
-        if (!hex || hex.length % 2 !== 0 || !/^[a-f0-9]+$/i.test(hex)) return '';
-        return new TextDecoder().decode(new Uint8Array(hex.match(/.{2}/g).map(function (h) {
-            return parseInt(h, 16);
-        })));
-    } catch (e) {
-        return '';
-    }
-};
-
-const obtenerLoginRecordado = () => {
-    var usuario = $.trim(localStorage.getItem(RECORDAR_LOGIN_USUARIO) || '');
-    var pass = decodificarLoginRecordado(localStorage.getItem(RECORDAR_LOGIN_PASS) || '');
-    return (usuario !== '' && pass !== '') ? {usuario: usuario, pass: pass} : null;
-};
-
-const guardarLoginRecordado = (usuario, pass) => {
-    localStorage.setItem(RECORDAR_LOGIN_USUARIO, usuario);
-    localStorage.setItem(RECORDAR_LOGIN_PASS, codificarLoginRecordado(pass));
-};
-
-const borrarLoginRecordado = () => {
-    localStorage.removeItem(RECORDAR_LOGIN_USUARIO);
-    localStorage.removeItem(RECORDAR_LOGIN_PASS);
-};
-
-// Se pregunta en cada inicio de sesión hasta que el usuario elija "Guardar"
-// o "No volver a mostrar" (esto último se puede revertir en Mi perfil).
-const RECORDAR_LOGIN_NO_PREGUNTAR = 'recordar_login_no_preguntar';
-
-const preguntarGuardarAcceso = (usuario, pass) => {
-    if (typeof confirmarMedsdi !== 'function') return Promise.resolve();
-    var noMostrarMas = false;
-    return confirmarMedsdi(
-        '¿Guardar acceso para próximas sesiones?',
-        'Evita ingresar tu contraseña cada vez. Puedes desactivarlo en Mi perfil.',
-        {
-            icon: undefined, // sin ícono de interrogación
-            confirmButtonText: 'Guardar',
-            cancelButtonText: 'Ahora no',
-            focusCancel: false,
-            footer: '<a href="#" class="swal-guardar-acceso-omitir">No volver a mostrar este mensaje</a>',
-            customClass: {
-                popup: 'swal-medsdi-popup swal-guardar-acceso',
-                title: 'swal-medsdi-title swal-guardar-acceso-titulo',
-                htmlContainer: 'swal-medsdi-text',
-                confirmButton: 'swal-medsdi-confirm',
-                cancelButton: 'swal-medsdi-cancel',
-                footer: 'swal-guardar-acceso-pie'
-            },
-            didOpen: function (popup) {
-                $(popup).find('.swal-guardar-acceso-omitir').on('click', function (e) {
-                    e.preventDefault();
-                    noMostrarMas = true;
-                    Swal.close();
-                });
-            }
-        }
-    ).then(function (guardar) {
-        if (guardar) {
-            guardarLoginRecordado(usuario, pass);
-            localStorage.removeItem(RECORDAR_LOGIN_NO_PREGUNTAR);
-        } else if (noMostrarMas) {
-            localStorage.setItem(RECORDAR_LOGIN_NO_PREGUNTAR, '1');
-        }
-    }, function () {});
-};
-
-const volverAPreguntarGuardarAcceso = () => {
-    localStorage.removeItem(RECORDAR_LOGIN_NO_PREGUNTAR);
-    actualizarEstadoRecordarLogin();
-    msg('Contraseña recordada', 'La próxima vez que inicies sesión se te preguntará si quieres guardar el acceso.', 'success');
-};
-
-const cargarLoginRecordado = () => {
-    // La contraseña siempre vuelve a mostrarse oculta.
+$(document).on('pageshow', '#login', function() {
     $('#pass').attr('type', 'password');
     $('#login .login-ojo').removeClass('activo').attr('aria-label', 'Mostrar contraseña');
-
-    var recordado = obtenerLoginRecordado();
-    if (recordado) {
-        $('#user').val(recordado.usuario);
-        $('#pass').val(recordado.pass);
-    }
-};
-
-const actualizarEstadoRecordarLogin = () => {
-    var recordado = obtenerLoginRecordado();
-    $('#perfil_app_recordar_estado').text(recordado
-        ? 'Tu contraseña está guardada en este dispositivo para ' + recordado.usuario + '.'
-        : 'No hay una contraseña guardada en este dispositivo.');
-    $('#perfil_app_recordar_desactivar').toggle(!!recordado);
-    $('#perfil_app_recordar_preguntar').toggle(!recordado && localStorage.getItem(RECORDAR_LOGIN_NO_PREGUNTAR) === '1');
-};
-
-const olvidarLoginRecordado = () => {
-    borrarLoginRecordado();
-    $('#pass').val('');
-    actualizarEstadoRecordarLogin();
-    msg('Contraseña recordada', 'La contraseña ya no se recordará en este dispositivo.', 'success');
-};
-
-$(document).on('pageshow', '#login', cargarLoginRecordado);
-
+});
 
 let loginBloqueoInterval = null;
 
@@ -223,29 +112,13 @@ const ingresarLogin = () => {
                     $('#uuid').val(resp.device_uuid);
                 }
                 inicializarNotificacionesPush();
-                // La contraseña no se conserva salvo que el usuario acepte
-                // "Guardar acceso". Si habilita huella, el plugin la
-                // protege dentro de Android Keystore.
                 localStorage.removeItem('pass');
-                var recordadoPrevio = obtenerLoginRecordado();
                 sesionUsuarioInit(resp.user);
                 $('#pass').val('');
                 if (typeof restaurarEstadoBiometricoTrasLogin === 'function') {
                     restaurarEstadoBiometricoTrasLogin();
                 }
-
-                if (recordadoPrevio && recordadoPrevio.usuario === user) {
-                    // Ya tenía el acceso guardado: se actualiza por si cambió la contraseña.
-                    guardarLoginRecordado(user, pass);
-                    prepararSeleccionRoles(resp);
-                } else if (localStorage.getItem(RECORDAR_LOGIN_NO_PREGUNTAR) === '1') {
-                    // Eligió "No volver a mostrar este mensaje".
-                    prepararSeleccionRoles(resp);
-                } else {
-                    preguntarGuardarAcceso(user, pass).then(function () {
-                        prepararSeleccionRoles(resp);
-                    });
-                }
+                prepararSeleccionRoles(resp);
             } else {
                 if (resp.bloqueado) {
                     const segundos = parseInt(resp.segundos_restantes || 900, 10);

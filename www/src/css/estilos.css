@@ -9483,7 +9483,8 @@ html body #login .login-recuperar.recuperar-reenviar { margin: 0 0 4px !importan
 html body #editar-perfil-app .campo-flotante .campo-ojo.activo .ojo-tachado { display: none; }
 html body #editar-perfil-app .perfil-app-tarjeta-rut strong { font-weight: 700; }
 
-/* ===================== LOGIN: OJO DE CONTRASEÑA Y RECORDAR ===================== */
+/* ===================== LOGIN: OJO DE CONTRASEÑA ===================== */
+/* ===================== LOGIN: OJO DE CONTRASEÑA ===================== */
 /* Mismo ojo que en Mi perfil: tachado con la clave oculta, normal cuando se ve. */
 html body #login .login-input-contenedor .login-ojo {
     position: absolute; z-index: 3; top: 50%; right: 6px; transform: translateY(-50%);
@@ -9504,58 +9505,10 @@ html body #login .login-opciones {
     margin: -4px 3px 4px;
 }
 html body #login .login-opciones .login-recuperar { margin: 0 0 0 auto !important; font-size: 12px !important; white-space: nowrap; }
-html body #login .login-recordar {
-    display: inline-flex; align-items: center; gap: 6px; margin: 0;
-    color: #343a40; font-size: 11px; font-weight: 700; white-space: nowrap; cursor: pointer; user-select: none;
-}
-html body #login .login-recordar input {
-    position: absolute; width: 1px; height: 1px; margin: 0; opacity: 0; pointer-events: none;
-}
-html body #login .login-recordar-caja {
-    display: inline-flex; align-items: center; justify-content: center; flex: 0 0 auto;
-    width: 17px; height: 17px; border: 1.5px solid #b9c2cf; border-radius: 5px; background: #fff;
-    transition: background .15s ease, border-color .15s ease;
-}
-html body #login .login-recordar-caja svg {
-    width: 12px; height: 12px; fill: none; stroke: #fff; stroke-width: 2.6;
-    stroke-linecap: round; stroke-linejoin: round; opacity: 0; transition: opacity .15s ease;
-}
-html body #login .login-recordar input:checked + .login-recordar-caja { background: #1450bd; border-color: #1450bd; }
-html body #login .login-recordar input:checked + .login-recordar-caja svg { opacity: 1; }
-html body #login .login-recordar input:focus-visible + .login-recordar-caja { box-shadow: 0 0 0 3px rgba(20,80,189,.2); }
-
-/* Mi perfil: vista de contraseña recordada. */
-.perfil-app-form[data-vista="recordar-login"] [data-panel="recordar-login"] { display: block; }
-html body #editar-perfil-app #perfil_app_recordar_desactivar {
-    background: #fff !important; border: 1.5px solid #d64545 !important; color: #c0392b !important;
-}
-
 /* Login: campos y botón Ingresar un poco más compactos. */
 html body #login .login-campo input.input-app { height: 46px !important; font-size: 15px !important; }
 html body #login .login-boton-principal { min-height: 46px !important; height: auto !important; font-size: 14px !important; }
 html body #login .login-titulo { font-size: 19px !important; }
-
-/* Alerta "Guardar acceso": botones con menos peso y enlace para no volver a mostrar. */
-.swal-guardar-acceso .swal-medsdi-confirm,
-.swal-guardar-acceso .swal-medsdi-cancel { font-weight: 700 !important; }
-.swal-guardar-acceso .swal-guardar-acceso-pie {
-    justify-content: center; margin: 14px 0 0 !important; padding: 12px 0 0 !important;
-    border-top: 1px solid #eef1f5 !important;
-}
-.swal-guardar-acceso .swal-guardar-acceso-omitir {
-    color: #7b8a9a !important; font-size: 12.5px; font-weight: 600; text-decoration: underline;
-}
-.swal-guardar-acceso .swal-guardar-acceso-titulo { font-size: 16px !important; font-weight: 800 !important; line-height: 1.3 !important; }
-.swal-guardar-acceso .swal-medsdi-text { margin-top: 4px !important; }
-.swal-guardar-acceso .swal2-actions { justify-content: center !important; margin-top: 16px !important; }
-.swal-guardar-acceso .swal-medsdi-confirm,
-.swal-guardar-acceso .swal-medsdi-cancel { flex: 0 0 116px !important; width: 116px !important; min-height: 40px !important; padding: 8px 12px !important; }
-.swal-guardar-acceso .swal-guardar-acceso-titulo { color: #000 !important; margin: 0 !important; padding: 0 !important; }
-.swal-guardar-acceso .swal-medsdi-text { margin-top: 2px !important; padding-top: 0 !important; }
-.swal-guardar-acceso .swal-medsdi-cancel {
-    background: #fff !important; background-color: #fff !important;
-    border: 1.5px solid #1450bd !important; color: #1450bd !important;
-}
 
 /* ===================== LOGIN: CAMPOS LIVIANOS Y ESPACIOS PAREJOS ===================== */
 /* Campos blancos con borde suave; al tocarlos el borde se pone azul. */

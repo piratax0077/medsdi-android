@@ -2330,11 +2330,6 @@
                 <span class="perfil-app-fila-texto">Inicio de sesión con huella</span>
                 <svg class="perfil-app-fila-flecha" viewBox="0 0 24 24" aria-hidden="true"><path d="M9 5l7 7-7 7"/></svg>
             </button>
-            <button type="button" data-role="none" class="perfil-app-fila" onclick="actualizarEstadoRecordarLogin(); mostrarVistaPerfilApp('recordar-login')">
-                <span class="perfil-app-fila-icono"><svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="8" cy="15" r="4"/><path d="M11 12l8-8M16 7l2 2M14 9l2 2"/></svg></span>
-                <span class="perfil-app-fila-texto">Contraseña recordada</span>
-                <svg class="perfil-app-fila-flecha" viewBox="0 0 24 24" aria-hidden="true"><path d="M9 5l7 7-7 7"/></svg>
-            </button>
         </nav>
         <div class="perfil-app-foto" data-panel-zona="datos">
             <div class="perfil-hero">
@@ -2450,12 +2445,6 @@
             <div id="perfil_app_biometria_login_activar" class="btn-app7 mt10" onclick="activarLoginBiometricoApp()">Activar ingreso con huella</div>
             <div id="perfil_app_biometria_login_desactivar" class="btn-app4 mt10" onclick="desactivarLoginBiometricoApp()" style="display:none">Desactivar ingreso con huella</div>
         </section>
-        <section class="perfil-app-seccion perfil-app-seguridad-card" data-panel="recordar-login">
-            <h3>Contraseña recordada</h3>
-            <p id="perfil_app_recordar_estado" class="perfil-app-ayuda">No hay una contraseña guardada en este dispositivo.</p>
-            <p class="perfil-app-ayuda">Al iniciar sesión se te pregunta si quieres guardar el acceso. Si lo olvidas aquí, tendrás que escribir tu contraseña de nuevo la próxima vez.</p>
-            <div id="perfil_app_recordar_desactivar" class="btn-app4 mt10" onclick="olvidarLoginRecordado()" style="display:none">Dejar de recordar contraseña</div>
-            <div id="perfil_app_recordar_preguntar" class="btn-app7 mt10" onclick="volverAPreguntarGuardarAcceso()" style="display:none">Volver a preguntar al iniciar sesión</div>        </section>
     </div>
     <div data-role="footer" class="footer menu-inferior">
         <div class="row bg-azul"><div class="col-xs-12 pt10 pb10 text-center">

@@ -27,18 +27,22 @@ const biometriaHabilitadaApp = () => {
     return localStorage.getItem(claveBiometriaApp()) === '1';
 };
 
+const uuidLoginBiometricoApp = () => {
+    return typeof obtenerUuidDispositivo === 'function'
+        ? $.trim(obtenerUuidDispositivo() || '')
+        : $.trim(localStorage.getItem('uuid') || '');
+};
+
 const loginBiometricoHabilitadoApp = () => {
     var habilitado = localStorage.getItem('biometria_login_habilitada') === '1';
     var usuarioAsociado = $.trim(localStorage.getItem('biometria_login_usuario') || '');
     var dispositivoAsociado = $.trim(localStorage.getItem('biometria_login_uuid') || '');
-    var dispositivoActual = typeof obtenerUuidDispositivo === 'function'
-        ? $.trim(obtenerUuidDispositivo() || '')
-        : $.trim(localStorage.getItem('uuid') || '');
+    var dispositivoActual = uuidLoginBiometricoApp();
 
-    // El botón solo representa una credencial realmente asociada: debe
-    // existir usuario y la asociación debe pertenecer a este dispositivo.
-    return habilitado && usuarioAsociado !== '' && dispositivoAsociado !== '' &&
-        dispositivoActual !== '' && dispositivoAsociado === dispositivoActual;
+    // Las versiones anteriores no guardaban UUID. La asociación se completa
+    // después de abrir la bóveda nativa con la huella del usuario.
+    return habilitado && usuarioAsociado !== '' && dispositivoActual !== '' &&
+        (!dispositivoAsociado || dispositivoAsociado === dispositivoActual);
 };
 
 const limpiarLoginBiometricoApp = () => {
@@ -272,22 +276,21 @@ const ingresarConBiometriaApp = () => {
         return;
     }
 
+    var dispositivoActual = uuidLoginBiometricoApp();
+    var usuarioAsociado = $.trim(localStorage.getItem('biometria_login_usuario') || '');
     Fingerprint.loadBiometricSecret(
         opcionesBiometriaApp('Confirma tu huella para ingresar a MED-SDI.'),
         function(secreto) {
             try {
                 var boveda = decodificarBovedaBiometricaApp(secreto);
-                if (!boveda.user || !boveda.pass) {
-                    throw new Error('No hay credenciales de inicio de sesión protegidas.');
+                if (!boveda.pass || $.trim(boveda.user || '') !== usuarioAsociado) {
+                    throw new Error('No hay credenciales protegidas para la cuenta asociada.');
                 }
-                localStorage.setItem('biometria_login_habilitada', '1');
-                localStorage.setItem('biometria_login_usuario', boveda.user);
-                localStorage.setItem(
-                    'biometria_login_uuid',
-                    typeof obtenerUuidDispositivo === 'function'
-                        ? obtenerUuidDispositivo()
-                        : (localStorage.getItem('uuid') || '')
-                );
+                if (!loginBiometricoHabilitadoApp() || uuidLoginBiometricoApp() !== dispositivoActual ||
+                    $.trim(localStorage.getItem('biometria_login_usuario') || '') !== usuarioAsociado) {
+                    throw new Error('La asociación biométrica cambió. Vuelve a intentar el ingreso.');
+                }
+                localStorage.setItem('biometria_login_uuid', dispositivoActual);
                 if (boveda.pin) {
                     sessionStorage.setItem('biometria_pin_recuperada', '1');
                 }
